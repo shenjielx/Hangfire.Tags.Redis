@@ -91,28 +91,35 @@ namespace Hangfire.Tags.Redis
 
             return monitoringApi.UseConnection(connection =>
             {
-                var succeededList = connection.ListRange(GetRedisKey("succeeded")).ToStringArray();
-                var deletedList = connection.ListRange(GetRedisKey("deleted")).ToStringArray();
-                var failedList = connection.SortedSetRangeByRank(GetRedisKey("failed")).ToStringArray();
-
-                var succeededCount = 0;
-                var deletedCount = 0;
-                var failedCount = 0;
+                var succeededCount = 0L;
+                var deletedCount = 0L;
+                var failedCount = 0L;
 
                 var pipeline = connection.CreateBatch();
                 var tasks = new List<Task> { };
                 foreach (var tag in tags)
                 {
-
-                    var task = pipeline.SortedSetRangeByScoreAsync(GetRedisKey(tag), order: Order.Descending)
+                    var tagCode = tag.Replace("tags:", string.Empty);
+                    var task = pipeline.ListLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetSucceededKey(tagCode)))
                     .ContinueWith(x =>
                     {
-                        var tagJobIds = x.Result.ToStringArray();
-                        succeededCount += succeededList.Count(r => tagJobIds.Any(s => r.Contains(s)));
-                        deletedCount += tagJobIds.Count(r => deletedList.Any(s => r.Contains(s)));
-                        failedCount += tagJobIds.Count(r => failedList.Any(s => r.Contains(s)));
+                        succeededCount += x.Result;
                     });
                     tasks.Add(task);
+
+                    var deletedTask = pipeline.ListLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetDeletedKey(tagCode)))
+                    .ContinueWith(x =>
+                    {
+                        deletedCount += x.Result;
+                    });
+                    tasks.Add(deletedTask);
+
+                    var failedTask = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetFailedKey(tagCode)))
+                    .ContinueWith(x =>
+                    {
+                        failedCount += x.Result;
+                    });
+                    tasks.Add(failedTask);
                 }
                 pipeline.Execute();
                 Task.WaitAll(tasks.ToArray());
@@ -120,17 +127,17 @@ namespace Hangfire.Tags.Redis
                 var result = new Dictionary<string, int> { };
                 if (succeededCount > 0)
                 {
-                    result.Add("Succeeded", succeededCount);
+                    result.Add("Succeeded", Convert.ToInt32(succeededCount));
                 }
 
                 if (failedCount > 0)
                 {
-                    result.Add("Failed", failedCount);
+                    result.Add("Failed", Convert.ToInt32(failedCount));
                 }
 
                 if (deletedCount > 0)
                 {
-                    result.Add("Deleted", deletedCount);
+                    result.Add("Deleted", Convert.ToInt32(deletedCount));
                 }
                 return result;
             });
