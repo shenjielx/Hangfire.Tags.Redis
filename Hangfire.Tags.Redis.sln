@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29403.142
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hangfire.Tags.Redis", "SRC\Hangfire.Tags.Redis\Hangfire.Tags.Redis.csproj", "{EFC2EDCD-2843-433F-B921-388E88418259}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hangfire.Tags.Redis.Extensions", "SRC\Hangfire.Tags.Redis.Extensions\Hangfire.Tags.Redis.Extensions.csproj", "{C531F1FF-87CF-4A52-976F-614442CD1341}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EFC2EDCD-2843-433F-B921-388E88418259}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFC2EDCD-2843-433F-B921-388E88418259}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFC2EDCD-2843-433F-B921-388E88418259}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFC2EDCD-2843-433F-B921-388E88418259}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C531F1FF-87CF-4A52-976F-614442CD1341}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C531F1FF-87CF-4A52-976F-614442CD1341}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C531F1FF-87CF-4A52-976F-614442CD1341}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C531F1FF-87CF-4A52-976F-614442CD1341}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6D5BE40A-4348-45E6-A17D-431AF1BE166D}
+	EndGlobalSection
+EndGlobal
