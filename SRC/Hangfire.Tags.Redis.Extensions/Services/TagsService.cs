@@ -9,6 +9,7 @@ using Hangfire.Redis;
 using Hangfire.States;
 using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace Hangfire.Tags.Redis.Extensions
@@ -18,10 +19,10 @@ namespace Hangfire.Tags.Redis.Extensions
         private readonly IDatabase _database;
         private readonly RedisStorageOptions _options;
 
-        public TagsService(IConnectionMultiplexer multiplexer, RedisStorageOptions options)
+        public TagsService(IConnectionMultiplexer multiplexer, IOptions<RedisStorageOptions> options)
         {
             _database = multiplexer.GetDatabase();
-            _options = options;
+            _options = options.Value;
         }
 
         public long ScheduledCount([NotNull] string tagName)
