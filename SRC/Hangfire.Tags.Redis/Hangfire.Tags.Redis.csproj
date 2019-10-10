@@ -6,6 +6,7 @@
     <Description>基于Hangfire.Tags和StackExchange.Redis，提供的Redis版Tags持久化。</Description>
     <PackageProjectUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</RepositoryUrl>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
