@@ -493,7 +493,7 @@ namespace Hangfire.Tags.Redis.Extensions
             for (var i = 0; i < dates.Count; i++)
             {
                 long value;
-                if (!long.TryParse(valuesMap[valuesMap.Keys.ElementAt(i)], out value))
+                if (!long.TryParse(valuesMap[valuesMap.Keys.ElementAt(i)], out value) || value < 0)
                 {
                     value = 0;
                 }
@@ -522,7 +522,7 @@ namespace Hangfire.Tags.Redis.Extensions
             for (var i = 0; i < dates.Count; i++)
             {
                 long value;
-                if (!long.TryParse(valuesMap[valuesMap.Keys.ElementAt(i)], out value))
+                if (!long.TryParse(valuesMap[valuesMap.Keys.ElementAt(i)], out value) || value < 0)
                 {
                     value = 0;
                 }

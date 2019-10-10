@@ -12,9 +12,8 @@ namespace Hangfire.Tags.Redis
         /// <param name="connectionMultiplexer"></param>
         /// <param name="options">Options for tags</param>
         /// <param name="redisOptions">Options for mysql storage</param>
-        /// <param name="useTagsStatistics">use state handler statistics</param>
         /// <returns></returns>
-        public static IGlobalConfiguration UseTagsWithRedis(this IGlobalConfiguration configuration, IConnectionMultiplexer connectionMultiplexer, TagsOptions options = null, RedisStorageOptions redisOptions = null, bool useTagsStatistics = true)
+        public static IGlobalConfiguration UseTagsWithRedis(this IGlobalConfiguration configuration, IConnectionMultiplexer connectionMultiplexer, TagsOptions options = null, RedisStorageOptions redisOptions = null)
         {
             options = options ?? new TagsOptions();
             redisOptions = redisOptions ?? new RedisStorageOptions()
@@ -22,16 +21,13 @@ namespace Hangfire.Tags.Redis
                 Db = connectionMultiplexer.GetDatabase().Database
             };
 
-            if (useTagsStatistics)
-            {
-                GlobalStateHandlers.Handlers.Add(new SucceededStateHandler(redisOptions));
-                GlobalStateHandlers.Handlers.Add(new DeletedStateHandler(redisOptions));
-                GlobalStateHandlers.Handlers.Add(new FailedStateHandler(redisOptions));
-                GlobalStateHandlers.Handlers.Add(new ScheduledStateHandler(redisOptions));
-                GlobalStateHandlers.Handlers.Add(new EnqueuedStateHandler(redisOptions));
-                GlobalStateHandlers.Handlers.Add(new ProcessingStateHandler(redisOptions));
-                GlobalStateHandlers.Handlers.Add(new AwaitingStateHandler(redisOptions));
-            }
+            GlobalStateHandlers.Handlers.Add(new SucceededStateHandler(redisOptions));
+            GlobalStateHandlers.Handlers.Add(new DeletedStateHandler(redisOptions));
+            GlobalStateHandlers.Handlers.Add(new FailedStateHandler(redisOptions));
+            GlobalStateHandlers.Handlers.Add(new ScheduledStateHandler(redisOptions));
+            GlobalStateHandlers.Handlers.Add(new EnqueuedStateHandler(redisOptions));
+            GlobalStateHandlers.Handlers.Add(new ProcessingStateHandler(redisOptions));
+            GlobalStateHandlers.Handlers.Add(new AwaitingStateHandler(redisOptions));
 
             options.Storage = new RedisTagsServiceStorage(connectionMultiplexer, redisOptions);
             return configuration.UseTags(options);

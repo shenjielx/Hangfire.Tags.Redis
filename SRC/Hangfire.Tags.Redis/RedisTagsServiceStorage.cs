@@ -169,44 +169,35 @@ namespace Hangfire.Tags.Redis
             var stateProperties = new string[] { };
 
             var jobIdSource = new List<string> { };
-            if (string.IsNullOrEmpty(stateName))
+            foreach (var tag in tags)
             {
-                foreach (var tag in tags)
+                var tagCode = tag.Replace("tags:", string.Empty);
+                if (string.IsNullOrWhiteSpace(stateName) || stateName.ToLower() == "succeeded")
                 {
-                    jobIdSource.AddRange(getTagValuesWithFilter(connection, tag));
+                    var succeededJobIdList = connection
+                        .ListRange(GetRedisKey(RedisTagsKeyInfo.GetSucceededKey(tagCode)))
+                        .ToStringArray();
+                    jobIdSource.AddRange(succeededJobIdList);
                 }
-            }
-            else
-            {
-                var stateJobIdList = new string[] { };
-                if (stateName.ToLower() == "succeeded")
+                if (string.IsNullOrWhiteSpace(stateName) || stateName.ToLower() == "deleted")
                 {
-                    stateJobIdList = connection.ListRange(GetRedisKey("succeeded")).ToStringArray();
+                    var deletedJobIdList = connection
+                        .ListRange(GetRedisKey(RedisTagsKeyInfo.GetDeletedKey(tagCode)))
+                        .ToStringArray();
+                    jobIdSource.AddRange(deletedJobIdList);
                 }
-                else if (stateName.ToLower() == "deleted")
+                if (string.IsNullOrWhiteSpace(stateName) || stateName.ToLower() == "failed")
                 {
-                    stateJobIdList = connection.ListRange(GetRedisKey("deleted")).ToStringArray();
-                }
-                else if (stateName.ToLower() == "failed")
-                {
-                    stateJobIdList = connection.SortedSetRangeByRank(GetRedisKey("failed")).ToStringArray();
-                }
-
-                foreach (var tag in tags)
-                {
-                    var tagList = getTagValuesWithFilter(connection, tag);
-                    jobIdSource.AddRange(tagList.Intersect(stateJobIdList));
+                    var failedJobIdList = connection
+                        .SortedSetRangeByRankWithScores(GetRedisKey(RedisTagsKeyInfo.GetFailedKey(tagCode)), order: Order.Descending)
+                        .Select(x => x.Element.ToString())
+                        .ToArray();
+                    jobIdSource.AddRange(failedJobIdList);
                 }
             }
             var jobIds = jobIdSource.Distinct().Skip(from).Take(count).ToArray();
             return GetJobsWithProperties(connection, jobIds, properties, stateProperties, selector);
         }
-
-        private IEnumerable<string> getTagValuesWithFilter(IDatabase connection, string tag)
-            => connection.SortedSetScan(GetRedisKey(tag))
-            //.Where(x => x.Score == 0 || x.Score > JobHelper.ToTimestamp(DateTime.UtcNow))
-            .OrderByDescending(x => x.Score)
-            .Select(x => x.Element.ToString());
 
         private JobList<T> GetJobsWithProperties<T>(
             [NotNull] IDatabase connection,
@@ -274,37 +265,49 @@ namespace Hangfire.Tags.Redis
 
         private int GetJobCount(IDatabase connection, string[] tags, string stateName)
         {
-            if (string.IsNullOrWhiteSpace(stateName))
+            var jobCount = 0L;
+
+            var pipeline = connection.CreateBatch();
+            var tasks = new List<Task> { };
+            foreach (var tag in tags)
             {
-                return tags.Sum(x => Convert.ToInt32(connection.SortedSetLength(this.GetRedisKey(x))));
-            }
-            else
-            {
-                var stateJobIdList = new string[] { };
-                if (stateName.ToLower() == "succeeded")
+                var tagCode = tag.Replace("tags:", string.Empty);
+
+                if (string.IsNullOrWhiteSpace(stateName) || stateName.ToLower() == "succeeded")
                 {
-                    stateJobIdList = connection.ListRange(GetRedisKey("succeeded")).ToStringArray();
-                }
-                else if (stateName.ToLower() == "deleted")
-                {
-                    stateJobIdList = connection.ListRange(GetRedisKey("deleted")).ToStringArray();
-                }
-                else if (stateName.ToLower() == "failed")
-                {
-                    stateJobIdList = connection.SortedSetRangeByRank(GetRedisKey("failed")).ToStringArray();
+                    var task = pipeline.ListLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetSucceededKey(tagCode)))
+                    .ContinueWith(x =>
+                    {
+                        jobCount += x.Result;
+                    });
+                    tasks.Add(task);
                 }
 
-                var jobCount = 0;
-                foreach (var tag in tags)
+                if (string.IsNullOrWhiteSpace(stateName) || stateName.ToLower() == "deleted")
                 {
-                    var tagList = getTagValuesWithFilter(connection, tag);
-                    jobCount += tagList.Intersect(stateJobIdList).Count();
+                    var deletedTask = pipeline.ListLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetDeletedKey(tagCode)))
+                    .ContinueWith(x =>
+                    {
+                        jobCount += x.Result;
+                    });
+                    tasks.Add(deletedTask);
                 }
 
-                return jobCount;
+                if (string.IsNullOrWhiteSpace(stateName) || stateName.ToLower() == "failed")
+                {
+                    var failedTask = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetFailedKey(tagCode)))
+                    .ContinueWith(x =>
+                    {
+                        jobCount += x.Result;
+                    });
+                    tasks.Add(failedTask);
+                }
             }
+            pipeline.Execute();
+            Task.WaitAll(tasks.ToArray());
+
+            return Convert.ToInt32(jobCount);
         }
-
 
         private static Job TryToGetJob(string type, string method, string parameterTypes, string arguments)
         {
