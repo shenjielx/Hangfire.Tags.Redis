@@ -28,7 +28,18 @@ namespace Hangfire.Tags.Redis.Extensions
             }
             else
             {
-                services.Configure<RedisStorageOptions>(x => x = redisOptions);
+                services.Configure<RedisStorageOptions>(x =>
+                {
+                    x.Prefix = redisOptions.Prefix;
+                    x.SucceededListSize = redisOptions.SucceededListSize;
+                    x.DeletedListSize = redisOptions.DeletedListSize;
+                    x.Db = redisOptions.Db;
+                    x.ExpiryCheckInterval = redisOptions.ExpiryCheckInterval;
+                    x.FetchTimeout = redisOptions.FetchTimeout;
+                    x.InvisibilityTimeout = redisOptions.InvisibilityTimeout;
+                    x.LifoQueues = redisOptions.LifoQueues;
+                    x.UseTransactions = redisOptions.UseTransactions;
+                });
             }
             services.AddSingleton<ITagsService, TagsService>();
             return services;
