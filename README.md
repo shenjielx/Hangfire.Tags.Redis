@@ -1,5 +1,8 @@
 # Hangfire.Tags.Redis
 
+[Hangfire.Tags.Redis](https://www.nuget.org/packages/Hangfire.Tags.Redis)
+[Hangfire.Tags.Redis.Extensions](https://www.nuget.org/packages/Hangfire.Tags.Redis.Extensions)
+
 基于Hangfire和Hangfire.Tags的使用Redis做持久化。
 
 **Dependencies**: 
