@@ -33,8 +33,8 @@ namespace Hangfire.Tags.Redis
             foreach (var item in tags)
             {
                 transaction.RemoveFromSet(GetFailedKey(item), context.BackgroundJob.Id);
-                transaction.DecrementCounter(GetStatsFailedDateKey(item));
-                transaction.DecrementCounter(GetStatsFailedHourKey(item));
+                //transaction.DecrementCounter(GetStatsFailedDateKey(item));
+                //transaction.DecrementCounter(GetStatsFailedHourKey(item));
             }
         }
 

@@ -37,8 +37,8 @@ namespace Hangfire.Tags.Redis
             {
                 transaction.RemoveFromList(GetSucceededKey(item), context.BackgroundJob.Id);
                 transaction.DecrementCounter(GetStatsSucceededKey(item));
-                transaction.DecrementCounter(GetStatsSucceededDateKey(item));
-                transaction.DecrementCounter(GetStatsSucceededHourKey(item));
+                //transaction.DecrementCounter(GetStatsSucceededDateKey(item));
+                //transaction.DecrementCounter(GetStatsSucceededHourKey(item));
             }
         }
 
