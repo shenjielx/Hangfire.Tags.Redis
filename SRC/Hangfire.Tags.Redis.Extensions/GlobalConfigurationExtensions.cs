@@ -16,18 +16,20 @@ namespace Hangfire.Tags.Redis.Extensions
         public static M AddTagsService(this M services, IConnectionMultiplexer multiplexer, RedisStorageOptions redisOptions = null)
         {
             services.AddSingleton(multiplexer);
-            services.AddTagsService(redisOptions);
-            return services;
-        }
-
-        public static M AddTagsService(this M services, RedisStorageOptions redisOptions = null)
-        {
-            services.Configure<RedisStorageOptions>(x =>
+            if (redisOptions is null)
             {
-                x.Prefix = redisOptions?.Prefix ?? "hangfire:";
-                x.SucceededListSize = redisOptions?.SucceededListSize ?? 9999;
-                x.DeletedListSize = redisOptions?.DeletedListSize ?? 4999;
-            });
+                services.Configure<RedisStorageOptions>(x =>
+                {
+                    x.Prefix = "hangfire:";
+                    x.SucceededListSize = 9999;
+                    x.DeletedListSize = 4999;
+                    x.Db = multiplexer.GetDatabase().Database;
+                });
+            }
+            else
+            {
+                services.Configure<RedisStorageOptions>(x => x = redisOptions);
+            }
             services.AddSingleton<ITagsService, TagsService>();
             return services;
         }
