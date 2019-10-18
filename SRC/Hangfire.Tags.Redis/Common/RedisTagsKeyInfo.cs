@@ -6,6 +6,8 @@ namespace Hangfire.Tags.Redis
     {
         public static readonly string Prefix = "statistics:";
 
+        public static string GetRetryKey(string tagCode) => $"{Prefix}{tagCode.ToLower()}:retries";
+
         public static string GetSucceededKey(string tagCode) => $"{Prefix}{tagCode.ToLower()}:succeeded";
         public static string GetDeletedKey(string tagCode) => $"{Prefix}{tagCode.ToLower()}:deleted";
         public static string GetFailedKey(string tagCode) => $"{Prefix}{tagCode.ToLower()}:failed";
