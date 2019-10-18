@@ -133,7 +133,7 @@ namespace Hangfire.Tags.Redis.Extensions
                 var stats = new TagsStatisticVM { };
 
                 var pipeline = redis.CreateBatch();
-                var tasks = new Task[8];
+                var tasks = new Task[9];
 
                 tasks[0] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetEnqueuedKey(tagName)))
                     .ContinueWith(x => stats.Enqueued = x.Result);
@@ -158,6 +158,9 @@ namespace Hangfire.Tags.Redis.Extensions
 
                 tasks[7] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetRetryKey(tagName)))
                     .ContinueWith(x => stats.Retries = x.Result);
+
+                tasks[8] = pipeline.SetLengthAsync(GetRedisKey("servers"))
+                    .ContinueWith(x => stats.Servers = x.Result);
 
 
                 pipeline.Execute();
