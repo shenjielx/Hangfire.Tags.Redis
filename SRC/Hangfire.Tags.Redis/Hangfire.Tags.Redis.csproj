@@ -6,8 +6,8 @@
     <Description>基于Hangfire.Tags和StackExchange.Redis，提供的Redis版Tags持久化。</Description>
     <PackageProjectUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</RepositoryUrl>
-    <Version>1.0.4</Version>
-    <PackageReleaseNotes>添加AutomaticRetryHandler方便statistics统计</PackageReleaseNotes>
+    <Version>1.0.5</Version>
+    <PackageReleaseNotes>Clean Code</PackageReleaseNotes>
     <PackageTags>Hangfire Tags Redis</PackageTags>
   </PropertyGroup>
 

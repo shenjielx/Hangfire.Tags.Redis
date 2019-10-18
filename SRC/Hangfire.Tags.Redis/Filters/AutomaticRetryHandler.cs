@@ -6,10 +6,10 @@ using Hangfire.States;
 using Hangfire.Storage;
 using Newtonsoft.Json;
 
-namespace Hangfire.Tags.Redis.Handlers
+namespace Hangfire.Tags.Redis
 {
     using M = RedisTagsKeyInfo;
-    internal class AutomaticRetryHandler : IApplyStateFilter
+    internal class AutomaticRetryFilter : IApplyStateFilter
     {
         protected HashSet<string> GetTags(ApplyStateContext context)
         {

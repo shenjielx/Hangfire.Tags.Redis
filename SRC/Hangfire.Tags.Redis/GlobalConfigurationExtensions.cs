@@ -29,6 +29,8 @@ namespace Hangfire.Tags.Redis
             GlobalStateHandlers.Handlers.Add(new ProcessingStateHandler(redisOptions));
             GlobalStateHandlers.Handlers.Add(new AwaitingStateHandler(redisOptions));
 
+            GlobalJobFilters.Filters.Add(new AutomaticRetryFilter());
+
             options.Storage = new RedisTagsServiceStorage(connectionMultiplexer, redisOptions);
             return configuration.UseTags(options);
         }
