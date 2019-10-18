@@ -11,6 +11,7 @@ namespace Hangfire.Tags.Redis.Extensions
         long EnqueuedCount(string tagName);
         long FailedCount(string tagName);
         long ProcessingCount(string tagName);
+        long RetriesCount(string tagName);
 
         long SucceededListCount(string tagName);
         long DeletedListCount(string tagName);
@@ -27,6 +28,7 @@ namespace Hangfire.Tags.Redis.Extensions
         JobList<FailedJobDto> FailedJobs(string tagName, int from, int count);
         JobList<ProcessingJobDto> ProcessingJobs(string tagName, int from, int count);
         JobList<ScheduledJobDto> ScheduledJobs(string tagName, int from, int count);
+        JobList<RetriesJobDto> RetriesJobs(string tagName, int from, int count);
         JobDetailsDto JobDetails([NotNull] string jobId);
 
         IDictionary<DateTime, long> DateSucceededJobs(string tagCode);

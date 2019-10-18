@@ -6,7 +6,9 @@
     <PackageProjectUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</RepositoryUrl>
     <Description>提供基于Tag的查询Service。</Description>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
+    <PackageTags>Hangfire Tags Redis</PackageTags>
+    <PackageReleaseNotes>添加Retries列表信息的查询接口</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

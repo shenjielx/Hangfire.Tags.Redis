@@ -53,6 +53,13 @@ namespace Hangfire.Tags.Redis.Extensions
             return UseConnection(redis => redis.ListLength(GetRedisKey(RedisTagsKeyInfo.GetSucceededKey(tagName))));
         }
 
+        public long RetriesCount([NotNull] string tagName)
+        {
+            if (tagName == null) throw new ArgumentNullException(nameof(tagName));
+
+            return UseConnection(redis => redis.SortedSetLength(GetRedisKey(RedisTagsKeyInfo.GetRetryKey(tagName))));
+        }
+
         public long FailedCount([NotNull] string tagName)
         {
             if (tagName == null) throw new ArgumentNullException(nameof(tagName));
@@ -126,7 +133,7 @@ namespace Hangfire.Tags.Redis.Extensions
                 var stats = new TagsStatisticVM { };
 
                 var pipeline = redis.CreateBatch();
-                var tasks = new Task[7];
+                var tasks = new Task[8];
 
                 tasks[0] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetEnqueuedKey(tagName)))
                     .ContinueWith(x => stats.Enqueued = x.Result);
@@ -149,6 +156,9 @@ namespace Hangfire.Tags.Redis.Extensions
                 tasks[6] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetAwaitingKey(tagName)))
                     .ContinueWith(x => stats.Awaiting = x.Result);
 
+                tasks[7] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetRetryKey(tagName)))
+                    .ContinueWith(x => stats.Retries = x.Result);
+
 
                 pipeline.Execute();
                 Task.WaitAll(tasks);
@@ -164,7 +174,7 @@ namespace Hangfire.Tags.Redis.Extensions
                 var result = new List<TagsStatisticVM> { };
 
                 var pipeline = redis.CreateBatch();
-                var tasks = new Task[tags.Length * 7];
+                var tasks = new Task[tags.Length * 8];
 
                 var index = 0;
                 foreach (var tagName in tags)
@@ -193,6 +203,10 @@ namespace Hangfire.Tags.Redis.Extensions
 
                     tasks[index++] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetAwaitingKey(tagName)))
                         .ContinueWith(x => stats.Awaiting = x.Result);
+
+                    tasks[index++] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetRetryKey(tagName)))
+                        .ContinueWith(x => stats.Retries = x.Result);
+
                     result.Add(stats);
                 }
 
@@ -385,6 +399,32 @@ namespace Hangfire.Tags.Redis.Extensions
                                 ScheduledState.StateName.Equals(states[job.Element][0], StringComparison.OrdinalIgnoreCase)
                         }))
                     .ToList());
+            });
+        }
+
+        public JobList<RetriesJobDto> RetriesJobs(string tagName, int from, int count)
+        {
+            return UseConnection(redis =>
+            {
+                var retriesJobIds = redis
+                    .SortedSetRangeByRankWithScores(GetRedisKey(RedisTagsKeyInfo.GetRetryKey(tagName)), from, from + count - 1, order: Order.Descending)
+                    .Select(x => x.Element.ToString())
+                    .ToArray();
+
+                return GetJobsWithProperties(
+                    redis,
+                    retriesJobIds,
+                    new[] { "CreatedAt", "RetryCount" },
+                    new[] { "State", "Reason", "EnqueueAt" },
+                    (job, jobData, state) => new RetriesJobDto
+                    {
+                        Job = job,
+                        Reason = state[1],
+                        State = state[0],
+                        EnqueueAt = JobHelper.DeserializeNullableDateTime(state[2]),
+                        CreatedAt = JobHelper.DeserializeDateTime(jobData[0]),
+                        RetryCount = Convert.ToInt32(jobData[1])
+                    });
             });
         }
 
