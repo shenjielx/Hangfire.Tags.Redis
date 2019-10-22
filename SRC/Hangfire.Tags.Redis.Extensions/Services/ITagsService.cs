@@ -31,9 +31,9 @@ namespace Hangfire.Tags.Redis.Extensions
         JobList<RetriesJobDto> RetriesJobs(string tagName, int from, int count);
         JobDetailsDto JobDetails([NotNull] string jobId);
 
-        IDictionary<DateTime, long> DateSucceededJobs(string tagCode);
-        IDictionary<DateTime, long> DateFailedJobs(string tagCode);
-        IDictionary<DateTime, long> HourlySucceededJobs(string tagCode);
-        IDictionary<DateTime, long> HourlyFailedJobs(string tagCode);
+        IDictionary<DateTime, long> DateSucceededJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null);
+        IDictionary<DateTime, long> DateFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null);
+        IDictionary<DateTime, long> HourlySucceededJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null);
+        IDictionary<DateTime, long> HourlyFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null);
     }
 }

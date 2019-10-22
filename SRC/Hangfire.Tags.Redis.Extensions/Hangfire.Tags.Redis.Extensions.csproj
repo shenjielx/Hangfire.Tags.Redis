@@ -6,9 +6,9 @@
     <PackageProjectUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</RepositoryUrl>
     <Description>提供基于Tag的查询Service。</Description>
-    <Version>1.0.5.1</Version>
+    <Version>1.0.6.1</Version>
     <PackageTags>Hangfire Tags Redis</PackageTags>
-    <PackageReleaseNotes>统计信息接口增加Servers数量返回</PackageReleaseNotes>
+    <PackageReleaseNotes>添加基于Tags的RecurringJob统计，以及时间统计数据增加时间区间查询条件</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

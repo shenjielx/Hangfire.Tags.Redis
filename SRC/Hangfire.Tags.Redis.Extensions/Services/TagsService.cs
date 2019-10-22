@@ -133,7 +133,7 @@ namespace Hangfire.Tags.Redis.Extensions
                 var stats = new TagsStatisticVM { };
 
                 var pipeline = redis.CreateBatch();
-                var tasks = new Task[9];
+                var tasks = new Task[10];
 
                 tasks[0] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetEnqueuedKey(tagName)))
                     .ContinueWith(x => stats.Enqueued = x.Result);
@@ -162,6 +162,9 @@ namespace Hangfire.Tags.Redis.Extensions
                 tasks[8] = pipeline.SetLengthAsync(GetRedisKey("servers"))
                     .ContinueWith(x => stats.Servers = x.Result);
 
+                tasks[9] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetRecurringJobKey(tagName)))
+                    .ContinueWith(x => stats.Recurring = x.Result);
+
 
                 pipeline.Execute();
                 Task.WaitAll(tasks);
@@ -177,7 +180,7 @@ namespace Hangfire.Tags.Redis.Extensions
                 var result = new List<TagsStatisticVM> { };
 
                 var pipeline = redis.CreateBatch();
-                var tasks = new Task[tags.Length * 8];
+                var tasks = new Task[tags.Length * 11];
 
                 var index = 0;
                 foreach (var tagName in tags)
@@ -209,6 +212,18 @@ namespace Hangfire.Tags.Redis.Extensions
 
                     tasks[index++] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetRetryKey(tagName)))
                         .ContinueWith(x => stats.Retries = x.Result);
+
+                    tasks[index++] = pipeline.StringGetAsync(GetRedisKey(RedisTagsKeyInfo.GetStatsSucceededDateKey(tagName, DateTime.Today)))
+                        .ContinueWith(x => stats.Today = long.Parse(x.Result.HasValue ? (string)x.Result : "0"));
+
+                    tasks[index++] = pipeline.StringGetAsync(GetRedisKey(RedisTagsKeyInfo.GetStatsSucceededHourKey(tagName, DateTime.Now.AddHours(-1))))
+                        .ContinueWith(x => stats.LastHour = long.Parse(x.Result.HasValue ? (string)x.Result : "0"));
+
+                    tasks[index++] = pipeline.SortedSetLengthAsync(GetRedisKey(RedisTagsKeyInfo.GetRecurringJobKey(tagName)))
+                        .ContinueWith(x =>
+                        {
+                            stats.Recurring = x.Result;
+                        });
 
                     result.Add(stats);
                 }
@@ -495,32 +510,38 @@ namespace Hangfire.Tags.Redis.Extensions
         }
 
 
-        public IDictionary<DateTime, long> DateSucceededJobs(string tagCode)
+        public IDictionary<DateTime, long> DateSucceededJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null)
         {
-            return UseConnection(redis => GetTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsSucceededDateKey(tagCode, x)));
+            endDate = endDate.HasValue && endDate.Value > DateTime.Today.AddDays(-30) ? endDate.Value : DateTime.Today;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-15);
+            return UseConnection(redis => GetTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsSucceededDateKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
-        public IDictionary<DateTime, long> DateFailedJobs(string tagCode)
+        public IDictionary<DateTime, long> DateFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null)
         {
-            return UseConnection(redis => GetTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedDateKey(tagCode, x)));
+            endDate = endDate.HasValue && endDate.Value > DateTime.Today.AddDays(-30) ? endDate.Value : DateTime.Today;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-15);
+            return UseConnection(redis => GetTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedDateKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
-        public IDictionary<DateTime, long> HourlySucceededJobs(string tagCode)
+        public IDictionary<DateTime, long> HourlySucceededJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null)
         {
-            return UseConnection(redis => GetHourlyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsSucceededHourKey(tagCode, x)));
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-7) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-2);
+            return UseConnection(redis => GetHourlyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsSucceededHourKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
-        public IDictionary<DateTime, long> HourlyFailedJobs(string tagCode)
+        public IDictionary<DateTime, long> HourlyFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null)
         {
-            return UseConnection(redis => GetHourlyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedHourKey(tagCode, x)));
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-7) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-2);
+            return UseConnection(redis => GetHourlyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedHourKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
-        private Dictionary<DateTime, long> GetTimelineStats([NotNull] IDatabase redis, [NotNull] Func<DateTime, string> key)
+        private Dictionary<DateTime, long> GetTimelineStats([NotNull] IDatabase redis, [NotNull] Func<DateTime, string> key, DateTime startDate, DateTime endDate)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
-            var endDate = DateTime.Today;
-            var startDate = endDate.AddDays(-7);
             var dates = new List<DateTime>();
 
             while (startDate <= endDate)
@@ -547,13 +568,17 @@ namespace Hangfire.Tags.Redis.Extensions
             return result;
         }
 
-        private Dictionary<DateTime, long> GetHourlyTimelineStats([NotNull] IDatabase redis, [NotNull] Func<DateTime, string> key)
+        private Dictionary<DateTime, long> GetHourlyTimelineStats([NotNull] IDatabase redis, [NotNull] Func<DateTime, string> key, DateTime startDate, DateTime endDate)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
-            var endDate = DateTime.Now;
             var dates = new List<DateTime>();
-            for (var i = 0; i < 24; i++)
+            var hourly = Convert.ToInt32(Math.Ceiling((endDate - startDate).TotalHours));
+            if (hourly < 24)
+            {
+                hourly = 24;
+            }
+            for (var i = 0; i < hourly; i++)
             {
                 dates.Add(endDate);
                 endDate = endDate.AddHours(-1);

@@ -6,8 +6,8 @@
     <Description>基于Hangfire.Tags和StackExchange.Redis，提供的Redis版Tags持久化。</Description>
     <PackageProjectUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</RepositoryUrl>
-    <Version>1.0.5</Version>
-    <PackageReleaseNotes>Clean Code</PackageReleaseNotes>
+    <Version>1.0.6</Version>
+    <PackageReleaseNotes>添加基于Tags的GetRecurringJobKey和GetRecurringJobId获取方法</PackageReleaseNotes>
     <PackageTags>Hangfire Tags Redis</PackageTags>
   </PropertyGroup>
 

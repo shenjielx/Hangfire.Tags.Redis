@@ -4,6 +4,9 @@ namespace Hangfire.Tags.Redis
 {
     public static class RedisTagsKeyInfo
     {
+        /// <summary>
+        /// statistics:
+        /// </summary>
         public static readonly string Prefix = "statistics:";
 
         public static string GetRetryKey(string tagCode) => $"{Prefix}{tagCode.ToLower()}:retries";
@@ -27,5 +30,9 @@ namespace Hangfire.Tags.Redis
         public static string GetStatsFailedHourKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH")}";
 
         public static string GetJobKey(string jobId) => $"tags:{jobId}";
+
+
+        public static string GetRecurringJobKey(string tagCode) => $"{Prefix}{ tagCode.ToLower()}:recurring-jobs";
+        public static string GetRecurringJobId(string tagCode, string recurringJobId) => $"{Prefix}{ tagCode.ToLower()}:recurring-jobs:{recurringJobId}";
     }
 }
