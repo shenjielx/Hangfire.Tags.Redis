@@ -23,7 +23,7 @@ namespace Hangfire.Tags.Redis
             {
                 transaction.AddToSet(GetFailedKey(item), context.BackgroundJob.Id, timestamp);
                 transaction.IncrementCounter(GetStatsFailedDateKey(item), TimeSpan.FromDays(30));
-                transaction.IncrementCounter(GetStatsFailedHourKey(item), TimeSpan.FromDays(1));
+                transaction.IncrementCounter(GetStatsFailedHourKey(item), TimeSpan.FromDays(7));
             }
         }
 

@@ -21,7 +21,7 @@ namespace Hangfire.Tags.Redis
                 transaction.InsertToList(GetSucceededKey(item), context.BackgroundJob.Id);
                 transaction.IncrementCounter(GetStatsSucceededKey(item));
                 transaction.IncrementCounter(GetStatsSucceededDateKey(item), TimeSpan.FromDays(30));
-                transaction.IncrementCounter(GetStatsSucceededHourKey(item), TimeSpan.FromDays(1));
+                transaction.IncrementCounter(GetStatsSucceededHourKey(item), TimeSpan.FromDays(7));
 
                 if (storage != null && SucceededListSize > 0)
                 {
