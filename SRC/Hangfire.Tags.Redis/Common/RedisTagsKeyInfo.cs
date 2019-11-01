@@ -29,6 +29,9 @@ namespace Hangfire.Tags.Redis
         public static string GetStatsSucceededHourKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd-HH")}";
         public static string GetStatsFailedHourKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH")}";
 
+        public static string GetStatsSucceededMinuteKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd-HH-mm")}";
+        public static string GetStatsFailedMinuteKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH-mm")}";
+
         public static string GetJobKey(string jobId) => $"tags:{jobId}";
 
 

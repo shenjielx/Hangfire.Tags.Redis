@@ -22,6 +22,7 @@ namespace Hangfire.Tags.Redis
                 transaction.IncrementCounter(GetStatsSucceededKey(item));
                 transaction.IncrementCounter(GetStatsSucceededDateKey(item), TimeSpan.FromDays(30));
                 transaction.IncrementCounter(GetStatsSucceededHourKey(item), TimeSpan.FromDays(7));
+                transaction.IncrementCounter(GetStatsSucceededMinuteKey(item), TimeSpan.FromDays(2));
 
                 if (storage != null && SucceededListSize > 0)
                 {

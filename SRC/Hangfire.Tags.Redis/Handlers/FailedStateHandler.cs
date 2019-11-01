@@ -24,6 +24,7 @@ namespace Hangfire.Tags.Redis
                 transaction.AddToSet(GetFailedKey(item), context.BackgroundJob.Id, timestamp);
                 transaction.IncrementCounter(GetStatsFailedDateKey(item), TimeSpan.FromDays(30));
                 transaction.IncrementCounter(GetStatsFailedHourKey(item), TimeSpan.FromDays(7));
+                transaction.IncrementCounter(GetStatsFailedMinuteKey(item), TimeSpan.FromDays(2));
             }
         }
 

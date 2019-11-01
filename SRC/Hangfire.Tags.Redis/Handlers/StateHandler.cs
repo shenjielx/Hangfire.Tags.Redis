@@ -38,6 +38,9 @@ namespace Hangfire.Tags.Redis
         internal string GetStatsSucceededHourKey(string tagName) => M.GetStatsSucceededHourKey(tagName, DateTime.Now);
         internal string GetStatsFailedHourKey(string tagName) => M.GetStatsFailedHourKey(tagName, DateTime.Now);
 
+        internal string GetStatsSucceededMinuteKey(string tagName) => M.GetStatsSucceededMinuteKey(tagName, DateTime.Now);
+        internal string GetStatsFailedMinuteKey(string tagName) => M.GetStatsFailedMinuteKey(tagName, DateTime.Now);
+
         private string getJobKey(string jobId) => M.GetJobKey(jobId);
 
         protected HashSet<string> GetTags(ApplyStateContext context)

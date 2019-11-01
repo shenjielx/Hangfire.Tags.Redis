@@ -35,5 +35,7 @@ namespace Hangfire.Tags.Redis.Extensions
         IDictionary<DateTime, long> DateFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null);
         IDictionary<DateTime, long> HourlySucceededJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null);
         IDictionary<DateTime, long> HourlyFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null);
+        IDictionary<DateTime, long> MinuteSucceededJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null);
+        IDictionary<DateTime, long> MinuteFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null);
     }
 }

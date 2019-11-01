@@ -538,6 +538,20 @@ namespace Hangfire.Tags.Redis.Extensions
             return UseConnection(redis => GetHourlyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedHourKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
+        public IDictionary<DateTime, long> MinuteSucceededJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-2) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddMinutes(-30);
+            return UseConnection(redis => GetHourlyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsSucceededMinuteKey(tagCode, x), startDate.Value, endDate.Value));
+        }
+
+        public IDictionary<DateTime, long> MinuteFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-2) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddMinutes(-30);
+            return UseConnection(redis => GetHourlyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedMinuteKey(tagCode, x), startDate.Value, endDate.Value));
+        }
+
         private Dictionary<DateTime, long> GetTimelineStats([NotNull] IDatabase redis, [NotNull] Func<DateTime, string> key, DateTime startDate, DateTime endDate)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
