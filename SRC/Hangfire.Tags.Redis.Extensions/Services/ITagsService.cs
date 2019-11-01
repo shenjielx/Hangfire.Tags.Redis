@@ -22,7 +22,7 @@ namespace Hangfire.Tags.Redis.Extensions
         TagsStatisticVM GetStatistics([NotNull]string tagName);
         List<TagsStatisticVM> GetStatisticsSummary(string[] tags);
 
-        JobList<SucceededJobDto> SucceededJobs(string tagName, int from, int count);
+        JobList<TagsSucceededJobDto> SucceededJobs(string tagName, int from, int count);
         JobList<EnqueuedJobDto> EnqueuedJobs([NotNull] string tagName, int from, int count);
         JobList<DeletedJobDto> DeletedJobs(string tagName, int from, int count);
         JobList<FailedJobDto> FailedJobs(string tagName, int from, int count);

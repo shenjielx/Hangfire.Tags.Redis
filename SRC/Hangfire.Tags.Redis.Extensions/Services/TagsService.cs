@@ -237,7 +237,7 @@ namespace Hangfire.Tags.Redis.Extensions
         }
 
 
-        public JobList<SucceededJobDto> SucceededJobs(string tagName, int from, int count)
+        public JobList<TagsSucceededJobDto> SucceededJobs(string tagName, int from, int count)
         {
             tagName = tagName.ToLower();
             return UseConnection(redis =>
@@ -251,8 +251,10 @@ namespace Hangfire.Tags.Redis.Extensions
                     succeededJobIds,
                     null,
                     new[] { "SucceededAt", "PerformanceDuration", "Latency", "State", "Result" },
-                    (job, jobData, state) => new SucceededJobDto
+                    (job, jobData, state) => new TagsSucceededJobDto
                     {
+                        Duration = state[1] != null ? (long?)long.Parse(state[1]) : null,
+                        Latency = state[2] != null ? (long?)long.Parse(state[2]) : null,
                         Job = job,
                         Result = state[4],
                         SucceededAt = JobHelper.DeserializeNullableDateTime(state[0]),
