@@ -6,7 +6,7 @@
     <PackageProjectUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</RepositoryUrl>
     <Description>提供基于Tag的查询Service。</Description>
-    <Version>1.0.7</Version>
+    <Version>1.0.7.1</Version>
     <PackageTags>Hangfire Tags Redis</PackageTags>
     <PackageReleaseNotes>增加分钟级统计，完成列表增加延迟字段</PackageReleaseNotes>
   </PropertyGroup>

@@ -544,14 +544,14 @@ namespace Hangfire.Tags.Redis.Extensions
         {
             endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-2) ? endDate.Value : DateTime.Now;
             startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddMinutes(-30);
-            return UseConnection(redis => GetHourlyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsSucceededMinuteKey(tagCode, x), startDate.Value, endDate.Value));
+            return UseConnection(redis => GetMinuteTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsSucceededMinuteKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
         public IDictionary<DateTime, long> MinuteFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null)
         {
             endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-2) ? endDate.Value : DateTime.Now;
             startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddMinutes(-30);
-            return UseConnection(redis => GetHourlyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedMinuteKey(tagCode, x), startDate.Value, endDate.Value));
+            return UseConnection(redis => GetMinuteTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedMinuteKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
         private Dictionary<DateTime, long> GetTimelineStats([NotNull] IDatabase redis, [NotNull] Func<DateTime, string> key, DateTime startDate, DateTime endDate)
@@ -598,6 +598,40 @@ namespace Hangfire.Tags.Redis.Extensions
             {
                 dates.Add(endDate);
                 endDate = endDate.AddHours(-1);
+            }
+
+            var keys = dates.Select(x => GetRedisKey(key(x))).ToArray();
+            var valuesMap = redis.GetValuesMap(keys);
+
+            var result = new Dictionary<DateTime, long>();
+            for (var i = 0; i < dates.Count; i++)
+            {
+                long value;
+                if (!long.TryParse(valuesMap[valuesMap.Keys.ElementAt(i)], out value) || value < 0)
+                {
+                    value = 0;
+                }
+
+                result.Add(dates[i], value);
+            }
+
+            return result;
+        }
+
+        private Dictionary<DateTime, long> GetMinuteTimelineStats([NotNull] IDatabase redis, [NotNull] Func<DateTime, string> key, DateTime startDate, DateTime endDate)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            var dates = new List<DateTime>();
+            var minutes = Convert.ToInt32(Math.Ceiling((endDate - startDate).TotalMinutes));
+            if (minutes < 30)
+            {
+                minutes = 30;
+            }
+            for (var i = 0; i < minutes; i++)
+            {
+                dates.Add(endDate);
+                endDate = endDate.AddMinutes(-1);
             }
 
             var keys = dates.Select(x => GetRedisKey(key(x))).ToArray();
