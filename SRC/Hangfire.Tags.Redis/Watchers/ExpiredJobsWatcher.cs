@@ -21,8 +21,8 @@ namespace Hangfire.Tags.Redis
 
         private IEnumerable<string> getProcessedKeys(string tagName)
         {
-            yield return $"{RedisTagsKeyInfo.Prefix}:{tagName}:succeeded";
-            yield return $"{RedisTagsKeyInfo.Prefix}:{tagName}:deleted";
+            yield return $"{RedisTagsKeyInfo.Prefix}{tagName}:succeeded";
+            yield return $"{RedisTagsKeyInfo.Prefix}{tagName}:deleted";
             yield return $"tags:{tagName}";
 
         }
