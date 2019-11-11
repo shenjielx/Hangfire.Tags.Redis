@@ -104,7 +104,7 @@ namespace Hangfire.Tags.Redis.Extensions
                 }
 
 
-                return serverNames.Select(x => new ServerDto
+                return serverNames.Where(x => servers.ContainsKey(x) && servers[x].Count > 2).Select(x => new ServerDto
                 {
                     Name = x,
                     WorkersCount = int.Parse(servers[x][0]),
@@ -516,14 +516,14 @@ namespace Hangfire.Tags.Redis.Extensions
         {
             endDate = endDate.HasValue && endDate.Value > DateTime.Today.AddDays(-30) ? endDate.Value : DateTime.Today;
             startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-15);
-            return UseConnection(redis => GetTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsSucceededDateKey(tagCode, x), startDate.Value, endDate.Value));
+            return UseConnection(redis => GetDailyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsSucceededDateKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
         public IDictionary<DateTime, long> DateFailedJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null)
         {
             endDate = endDate.HasValue && endDate.Value > DateTime.Today.AddDays(-30) ? endDate.Value : DateTime.Today;
             startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-15);
-            return UseConnection(redis => GetTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedDateKey(tagCode, x), startDate.Value, endDate.Value));
+            return UseConnection(redis => GetDailyTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedDateKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
         public IDictionary<DateTime, long> HourlySucceededJobs(string tagCode, DateTime? startDate = null, DateTime? endDate = null)
@@ -554,7 +554,7 @@ namespace Hangfire.Tags.Redis.Extensions
             return UseConnection(redis => GetMinuteTimelineStats(redis, x => RedisTagsKeyInfo.GetStatsFailedMinuteKey(tagCode, x), startDate.Value, endDate.Value));
         }
 
-        private Dictionary<DateTime, long> GetTimelineStats([NotNull] IDatabase redis, [NotNull] Func<DateTime, string> key, DateTime startDate, DateTime endDate)
+        private Dictionary<DateTime, long> GetDailyTimelineStats([NotNull] IDatabase redis, [NotNull] Func<DateTime, string> key, DateTime startDate, DateTime endDate)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -651,6 +651,171 @@ namespace Hangfire.Tags.Redis.Extensions
 
             return result;
         }
+
+        #region { Machine }
+
+        public List<ServerTagsStatisticDto> DateSucceededJobs(string[] servers, string tagCode, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Today.AddDays(-30) ? endDate.Value : DateTime.Today;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-15);
+            return UseConnection(redis => GetDailyTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsSucceededDateKey(tagCode, server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> DateFailedJobs(string[] servers, string tagCode, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Today.AddDays(-30) ? endDate.Value : DateTime.Today;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-15);
+            return UseConnection(redis => GetDailyTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsFailedDateKey(tagCode, server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> HourlySucceededJobs(string[] servers, string tagCode, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-7) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-2);
+            return UseConnection(redis => GetHourlyTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsSucceededHourKey(tagCode, server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> HourlyFailedJobs(string[] servers, string tagCode, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-7) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-2);
+            return UseConnection(redis => GetHourlyTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsFailedHourKey(tagCode, server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> MinuteSucceededJobs(string[] servers, string tagCode, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-2) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddMinutes(-30);
+            return UseConnection(redis => GetMinuteTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsSucceededMinuteKey(tagCode, server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> MinuteFailedJobs(string[] servers, string tagCode, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-2) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddMinutes(-30);
+            return UseConnection(redis => GetMinuteTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsFailedMinuteKey(tagCode, server, date), startDate.Value, endDate.Value));
+        }
+
+        private List<ServerTagsStatisticDto> GetDailyTimelineStats([NotNull] IDatabase redis, string[] servers, [NotNull] Func<string, DateTime, string> key, DateTime startDate, DateTime endDate)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            var dates = new List<DateTime>();
+
+            while (startDate <= endDate)
+            {
+                dates.Add(endDate);
+                endDate = endDate.AddDays(-1);
+            }
+
+            var result = new List<ServerTagsStatisticDto> { };
+            foreach (var item in servers)
+            {
+                var resultServer = new ServerTagsStatisticDto
+                {
+                    Server = item,
+                    Statistics = new Dictionary<DateTime, long>()
+                };
+                var keys = dates.Select(x => GetRedisKey(key(item, x))).ToArray();
+
+                var valuesMap = redis.GetValuesMap(keys);
+                for (var i = 0; i < dates.Count; i++)
+                {
+                    long value;
+                    if (!long.TryParse(valuesMap[valuesMap.Keys.ElementAt(i)], out value) || value < 0)
+                    {
+                        value = 0;
+                    }
+                    resultServer.Statistics.Add(dates[i], value);
+                }
+            }
+
+            return result;
+        }
+
+        private List<ServerTagsStatisticDto> GetHourlyTimelineStats([NotNull] IDatabase redis, string[] servers, [NotNull] Func<string, DateTime, string> key, DateTime startDate, DateTime endDate)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            var dates = new List<DateTime>();
+            var hourly = Convert.ToInt32(Math.Ceiling((endDate - startDate).TotalHours));
+            if (hourly < 24)
+            {
+                hourly = 24;
+            }
+            for (var i = 0; i < hourly; i++)
+            {
+                dates.Add(endDate);
+                endDate = endDate.AddHours(-1);
+            }
+
+            var result = new List<ServerTagsStatisticDto> { };
+            foreach (var item in servers)
+            {
+                var resultServer = new ServerTagsStatisticDto
+                {
+                    Server = item,
+                    Statistics = new Dictionary<DateTime, long>()
+                };
+                var keys = dates.Select(x => GetRedisKey(key(item, x))).ToArray();
+
+                var valuesMap = redis.GetValuesMap(keys);
+                for (var i = 0; i < dates.Count; i++)
+                {
+                    long value;
+                    if (!long.TryParse(valuesMap[valuesMap.Keys.ElementAt(i)], out value) || value < 0)
+                    {
+                        value = 0;
+                    }
+                    resultServer.Statistics.Add(dates[i], value);
+                }
+            }
+
+            return result;
+        }
+
+        private List<ServerTagsStatisticDto> GetMinuteTimelineStats([NotNull] IDatabase redis, string[] servers, [NotNull] Func<string, DateTime, string> key, DateTime startDate, DateTime endDate)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            var dates = new List<DateTime>();
+            var minutes = Convert.ToInt32(Math.Ceiling((endDate - startDate).TotalMinutes));
+            if (minutes < 30)
+            {
+                minutes = 30;
+            }
+            for (var i = 0; i < minutes; i++)
+            {
+                dates.Add(endDate);
+                endDate = endDate.AddMinutes(-1);
+            }
+
+            var result = new List<ServerTagsStatisticDto> { };
+            foreach (var item in servers)
+            {
+                var resultServer = new ServerTagsStatisticDto
+                {
+                    Server = item,
+                    Statistics = new Dictionary<DateTime, long>()
+                };
+                var keys = dates.Select(x => GetRedisKey(key(item, x))).ToArray();
+
+                var valuesMap = redis.GetValuesMap(keys);
+                for (var i = 0; i < dates.Count; i++)
+                {
+                    long value;
+                    if (!long.TryParse(valuesMap[valuesMap.Keys.ElementAt(i)], out value) || value < 0)
+                    {
+                        value = 0;
+                    }
+                    resultServer.Statistics.Add(dates[i], value);
+                }
+            }
+
+            return result;
+        }
+
+        #endregion
 
         private JobList<T> GetJobsWithProperties<T>(
         [NotNull] IDatabase redis,

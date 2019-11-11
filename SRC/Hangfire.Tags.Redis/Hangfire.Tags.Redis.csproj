@@ -6,8 +6,8 @@
     <Description>基于Hangfire.Tags和StackExchange.Redis，提供的Redis版Tags持久化。</Description>
     <PackageProjectUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</RepositoryUrl>
-    <Version>1.0.7.1</Version>
-    <PackageReleaseNotes>增加分钟级统计</PackageReleaseNotes>
+    <Version>1.2.0</Version>
+    <PackageReleaseNotes>增加区分服务器MachineName的统计和查询</PackageReleaseNotes>
     <PackageTags>Hangfire Tags Redis</PackageTags>
   </PropertyGroup>
 

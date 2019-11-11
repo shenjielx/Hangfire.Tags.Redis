@@ -23,6 +23,11 @@ namespace Hangfire.Tags.Redis
                 transaction.IncrementCounter(GetStatsSucceededDateKey(item), TimeSpan.FromDays(30));
                 transaction.IncrementCounter(GetStatsSucceededHourKey(item), TimeSpan.FromDays(7));
                 transaction.IncrementCounter(GetStatsSucceededMinuteKey(item), TimeSpan.FromDays(2));
+                //Environment.MachineName
+                var machineItem = $"{item}:{Environment.MachineName.ToLower()}";
+                transaction.IncrementCounter(GetStatsSucceededDateKey(machineItem), TimeSpan.FromDays(30));
+                transaction.IncrementCounter(GetStatsSucceededHourKey(machineItem), TimeSpan.FromDays(7));
+                transaction.IncrementCounter(GetStatsSucceededMinuteKey(machineItem), TimeSpan.FromDays(1));
 
                 if (storage != null && SucceededListSize > 0)
                 {

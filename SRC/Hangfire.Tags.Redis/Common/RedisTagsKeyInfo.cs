@@ -32,6 +32,15 @@ namespace Hangfire.Tags.Redis
         public static string GetStatsSucceededMinuteKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd-HH-mm")}";
         public static string GetStatsFailedMinuteKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH-mm")}";
 
+        public static string GetStatsSucceededDateKey(string tagCode, string server, DateTime date) => $"{Prefix}{tagCode.ToLower()}:{server.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd")}";
+        public static string GetStatsFailedDateKey(string tagCode, string server, DateTime date) => $"{Prefix}{tagCode.ToLower()}:{server.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd")}";
+
+        public static string GetStatsSucceededHourKey(string tagCode, string server, DateTime date) => $"{Prefix}{tagCode.ToLower()}:{server.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd-HH")}";
+        public static string GetStatsFailedHourKey(string tagCode, string server, DateTime date) => $"{Prefix}{tagCode.ToLower()}:{server.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH")}";
+
+        public static string GetStatsSucceededMinuteKey(string tagCode, string server, DateTime date) => $"{Prefix}{tagCode.ToLower()}:{server.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd-HH-mm")}";
+        public static string GetStatsFailedMinuteKey(string tagCode, string server, DateTime date) => $"{Prefix}{tagCode.ToLower()}:{server.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH-mm")}";
+
         public static string GetJobKey(string jobId) => $"tags:{jobId}";
 
 
