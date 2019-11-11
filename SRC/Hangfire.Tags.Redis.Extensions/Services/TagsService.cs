@@ -728,6 +728,8 @@ namespace Hangfire.Tags.Redis.Extensions
                     }
                     resultServer.Statistics.Add(dates[i], value);
                 }
+                resultServer.Statistics = resultServer.Statistics.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+                result.Add(resultServer);
             }
 
             return result;
@@ -769,6 +771,8 @@ namespace Hangfire.Tags.Redis.Extensions
                     }
                     resultServer.Statistics.Add(dates[i], value);
                 }
+                resultServer.Statistics = resultServer.Statistics.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+                result.Add(resultServer);
             }
 
             return result;
@@ -810,6 +814,8 @@ namespace Hangfire.Tags.Redis.Extensions
                     }
                     resultServer.Statistics.Add(dates[i], value);
                 }
+                resultServer.Statistics = resultServer.Statistics.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+                result.Add(resultServer);
             }
 
             return result;
