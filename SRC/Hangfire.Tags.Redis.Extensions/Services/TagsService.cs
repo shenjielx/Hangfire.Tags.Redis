@@ -652,7 +652,7 @@ namespace Hangfire.Tags.Redis.Extensions
             return result;
         }
 
-        #region { Machine }
+        #region { Machine Tag }
 
         public List<ServerTagsStatisticDto> DateSucceededJobs(string[] servers, string tagCode, DateTime? startDate = null, DateTime? endDate = null)
         {
@@ -821,6 +821,51 @@ namespace Hangfire.Tags.Redis.Extensions
             return result;
         }
 
+        #endregion
+
+        #region { Machine }
+
+        public List<ServerTagsStatisticDto> DateSucceededJobs(string[] servers, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Today.AddDays(-30) ? endDate.Value : DateTime.Today;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-15);
+            return UseConnection(redis => GetDailyTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsSucceededDateKey(server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> DateFailedJobs(string[] servers, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Today.AddDays(-30) ? endDate.Value : DateTime.Today;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-15);
+            return UseConnection(redis => GetDailyTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsFailedDateKey(server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> HourlySucceededJobs(string[] servers, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-7) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-2);
+            return UseConnection(redis => GetHourlyTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsSucceededHourKey(server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> HourlyFailedJobs(string[] servers, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-7) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddDays(-2);
+            return UseConnection(redis => GetHourlyTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsFailedHourKey(server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> MinuteSucceededJobs(string[] servers, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-2) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddMinutes(-30);
+            return UseConnection(redis => GetMinuteTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsSucceededMinuteKey(server, date), startDate.Value, endDate.Value));
+        }
+
+        public List<ServerTagsStatisticDto> MinuteFailedJobs(string[] servers, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate = endDate.HasValue && endDate.Value > DateTime.Now.AddDays(-2) ? endDate.Value : DateTime.Now;
+            startDate = startDate.HasValue && startDate.Value > DateTime.MinValue ? startDate.Value : endDate.Value.AddMinutes(-30);
+            return UseConnection(redis => GetMinuteTimelineStats(redis, servers, (server, date) => RedisTagsKeyInfo.GetStatsFailedMinuteKey(server, date), startDate.Value, endDate.Value));
+        }
         #endregion
 
         private JobList<T> GetJobsWithProperties<T>(

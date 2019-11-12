@@ -30,6 +30,11 @@ namespace Hangfire.Tags.Redis
                 transaction.IncrementCounter(GetStatsFailedDateKey(machineItem), TimeSpan.FromDays(30));
                 transaction.IncrementCounter(GetStatsFailedHourKey(machineItem), TimeSpan.FromDays(7));
                 transaction.IncrementCounter(GetStatsFailedMinuteKey(machineItem), TimeSpan.FromDays(1));
+                //Environment.MachineName
+                var machine = Environment.MachineName.ToLower();
+                transaction.IncrementCounter(GetStatsFailedDateKey(machine), TimeSpan.FromDays(30));
+                transaction.IncrementCounter(GetStatsFailedHourKey(machine), TimeSpan.FromDays(7));
+                transaction.IncrementCounter(GetStatsFailedMinuteKey(machine), TimeSpan.FromDays(1));
             }
         }
 

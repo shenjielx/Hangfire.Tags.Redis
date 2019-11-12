@@ -23,14 +23,14 @@ namespace Hangfire.Tags.Redis
         public static string GetStatsSucceededKey(string tagCode) => $"{Prefix}{tagCode.ToLower()}:stats:succeeded";
         public static string GetStatsDeletedKey(string tagCode) => $"{Prefix}{tagCode.ToLower()}:stats:deleted";
 
-        public static string GetStatsSucceededDateKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd")}";
-        public static string GetStatsFailedDateKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd")}";
+        public static string GetStatsSucceededDateKey(string key, DateTime date) => $"{Prefix}{key.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd")}";
+        public static string GetStatsFailedDateKey(string key, DateTime date) => $"{Prefix}{key.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd")}";
 
-        public static string GetStatsSucceededHourKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd-HH")}";
-        public static string GetStatsFailedHourKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH")}";
+        public static string GetStatsSucceededHourKey(string key, DateTime date) => $"{Prefix}{key.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd-HH")}";
+        public static string GetStatsFailedHourKey(string key, DateTime date) => $"{Prefix}{key.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH")}";
 
-        public static string GetStatsSucceededMinuteKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd-HH-mm")}";
-        public static string GetStatsFailedMinuteKey(string tagCode, DateTime date) => $"{Prefix}{tagCode.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH-mm")}";
+        public static string GetStatsSucceededMinuteKey(string key, DateTime date) => $"{Prefix}{key.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd-HH-mm")}";
+        public static string GetStatsFailedMinuteKey(string key, DateTime date) => $"{Prefix}{key.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd-HH-mm")}";
 
         public static string GetStatsSucceededDateKey(string tagCode, string server, DateTime date) => $"{Prefix}{tagCode.ToLower()}:{server.ToLower()}:stats:succeeded:{date.ToString("yyyy-MM-dd")}";
         public static string GetStatsFailedDateKey(string tagCode, string server, DateTime date) => $"{Prefix}{tagCode.ToLower()}:{server.ToLower()}:stats:failed:{date.ToString("yyyy-MM-dd")}";
