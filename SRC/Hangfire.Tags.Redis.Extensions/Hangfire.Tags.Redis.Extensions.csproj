@@ -9,6 +9,7 @@
     <Version>1.2.0</Version>
     <PackageTags>Hangfire Tags Redis</PackageTags>
     <PackageReleaseNotes>增加区分服务器MachineName的统计和查询</PackageReleaseNotes>
+    <PackageVersion>1.2.2</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

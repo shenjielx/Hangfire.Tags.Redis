@@ -9,6 +9,7 @@
     <Version>1.2.1</Version>
     <PackageReleaseNotes>增加服务器MachineName的统计和查询</PackageReleaseNotes>
     <PackageTags>Hangfire Tags Redis</PackageTags>
+    <PackageVersion>1.2.2</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,10 +25,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HangFire.Core" Version="1.7.6" />
-    <PackageReference Include="HangFire.Redis.StackExchange" Version="1.8.0" />
-    <PackageReference Include="Hangfire.Tags" Version="0.8.0" />
-    <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
+    <PackageReference Include="HangFire.Core" Version="1.7.11" />
+    <PackageReference Include="HangFire.Redis.StackExchange" Version="1.8.2" />
+    <PackageReference Include="Hangfire.Tags" Version="1.5.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.1.30" />
   </ItemGroup>
 
 </Project>
