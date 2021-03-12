@@ -5,6 +5,7 @@ using Hangfire.Redis;
 using Hangfire.States;
 using Hangfire.Storage;
 using Newtonsoft.Json;
+using StackExchange.Redis;
 
 namespace Hangfire.Tags.Redis
 {
@@ -13,11 +14,15 @@ namespace Hangfire.Tags.Redis
     {
         internal readonly int SucceededListSize;
         internal readonly int DeletedListSize;
+        protected readonly bool _useTransactions;
+        protected readonly IDatabase _database;
 
-        public StateHandler(RedisStorageOptions options)
+        public StateHandler(RedisStorageOptions options, IConnectionMultiplexer multiplexer)
         {
             SucceededListSize = options.SucceededListSize > 0 ? options.SucceededListSize : 1000;
             DeletedListSize = options.DeletedListSize > 0 ? options.DeletedListSize : 1000;
+            _useTransactions = options.UseTransactions;
+            _database = multiplexer.GetDatabase();
         }
 
         internal string GetSucceededKey(string tagName) => M.GetSucceededKey(tagName);
@@ -71,6 +76,37 @@ namespace Hangfire.Tags.Redis
         public abstract void Apply(ApplyStateContext context, IWriteOnlyTransaction transaction);
         public abstract void Unapply(ApplyStateContext context, IWriteOnlyTransaction transaction);
 
+        protected void IncrementCounter(string key, TimeSpan expireIn)
+        {
+            _database.StringIncrementAsync(key);
+            _database.KeyExpireAsync(key, expireIn);
+        }
+        
+        protected void IncrementCounter(string key) => _database.StringIncrementAsync(key);
+
+        protected void InsertToList(string key, string value) => _database.ListLeftPushAsync(key, (RedisValue) value);
+
+        protected void RemoveFromList(string key, string value) => _database.ListRemoveAsync(key, (RedisValue) value);
+
+        protected void TrimList(string key, int keepStartingFrom, int keepEndingAt) => _database.ListTrimAsync(key, keepStartingFrom, keepEndingAt);
+
+        protected void DecrementCounter(string key) => _database.StringDecrementAsync(key);
+
+        protected void AddToSet(string key, string value) => AddToSet(key, value, 0.0);
+
+        protected void AddToSet(string key, string value, double score)
+        {
+            if (value == null)
+                throw new ArgumentNullException(nameof (value));
+            _database.SortedSetAddAsync(key, (RedisValue) value, score);
+        }
+
+        protected void RemoveFromSet(string key, string value)
+        {
+            if (value == null)
+                throw new ArgumentNullException(nameof (value));
+            _database.SortedSetRemoveAsync((RedisKey) key, (RedisValue) value);
+        }
     }
 
     internal class TagsJobArgs

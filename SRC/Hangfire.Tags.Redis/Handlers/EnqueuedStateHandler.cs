@@ -2,12 +2,13 @@
 using Hangfire.Redis;
 using Hangfire.States;
 using Hangfire.Storage;
+using StackExchange.Redis;
 
 namespace Hangfire.Tags.Redis
 {
     internal class EnqueuedStateHandler : StateHandler
     {
-        public EnqueuedStateHandler(RedisStorageOptions options) : base(options)
+        public EnqueuedStateHandler(RedisStorageOptions options, IConnectionMultiplexer multiplexer) : base(options, multiplexer)
         {
         }
 
@@ -20,7 +21,14 @@ namespace Hangfire.Tags.Redis
 
             foreach (var item in tags)
             {
-                transaction.AddToSet(GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
+                if (_useTransactions)
+                {
+                    transaction.AddToSet(GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
+                }
+                else
+                {
+                    AddToSet(GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
+                }
             }
         }
 
@@ -29,7 +37,14 @@ namespace Hangfire.Tags.Redis
             var tags = GetTags(context);
             foreach (var item in tags)
             {
-                transaction.RemoveFromSet(GetEnqueuedKey(item), context.BackgroundJob.Id);
+                if (_useTransactions)
+                {
+                    transaction.RemoveFromSet(GetEnqueuedKey(item), context.BackgroundJob.Id);
+                }
+                else
+                {
+                    RemoveFromSet(GetEnqueuedKey(item), context.BackgroundJob.Id);
+                }
             }
         }
 

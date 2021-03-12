@@ -3,12 +3,13 @@ using Hangfire.Common;
 using Hangfire.Redis;
 using Hangfire.States;
 using Hangfire.Storage;
+using StackExchange.Redis;
 
 namespace Hangfire.Tags.Redis
 {
     internal class AwaitingStateHandler : StateHandler
     {
-        public AwaitingStateHandler(RedisStorageOptions options) : base(options)
+        public AwaitingStateHandler(RedisStorageOptions options, IConnectionMultiplexer multiplexer) : base(options, multiplexer)
         {
         }
 
@@ -18,7 +19,14 @@ namespace Hangfire.Tags.Redis
 
             foreach (var item in tags)
             {
-                transaction.AddToSet(GetAwaitingKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                if (_useTransactions)
+                {
+                    transaction.AddToSet(GetAwaitingKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                }
+                else
+                {
+                    _database.SortedSetAddAsync(GetAwaitingKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                }
             }
         }
 
@@ -27,7 +35,14 @@ namespace Hangfire.Tags.Redis
             var tags = GetTags(context);
             foreach (var item in tags)
             {
-                transaction.RemoveFromSet(GetAwaitingKey(item), context.BackgroundJob.Id);
+                if (_useTransactions)
+                {
+                    transaction.RemoveFromSet(GetAwaitingKey(item), context.BackgroundJob.Id);
+                }
+                else
+                {
+                    _database.SortedSetRemoveAsync(GetAwaitingKey(item), context.BackgroundJob.Id);
+                }
             }
         }
 

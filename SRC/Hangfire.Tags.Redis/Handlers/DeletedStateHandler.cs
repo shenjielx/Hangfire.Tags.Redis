@@ -1,12 +1,13 @@
 ﻿using Hangfire.Redis;
 using Hangfire.States;
 using Hangfire.Storage;
+using StackExchange.Redis;
 
 namespace Hangfire.Tags.Redis
 {
     internal class DeletedStateHandler : StateHandler
     {
-        public DeletedStateHandler(RedisStorageOptions options) : base(options)
+        public DeletedStateHandler(RedisStorageOptions options, IConnectionMultiplexer multiplexer) : base(options, multiplexer)
         {
         }
 
@@ -17,12 +18,25 @@ namespace Hangfire.Tags.Redis
 
             foreach (var item in tags)
             {
-                transaction.InsertToList(GetDeletedKey(item), context.BackgroundJob.Id);
-                transaction.IncrementCounter(GetStatsDeletedKey(item));
-
-                if (storage != null && SucceededListSize > 0)
+                if (_useTransactions)
                 {
-                    transaction.TrimList(GetDeletedKey(item), 0, SucceededListSize);
+                    transaction.InsertToList(GetDeletedKey(item), context.BackgroundJob.Id);
+                    transaction.IncrementCounter(GetStatsDeletedKey(item));
+
+                    if (storage != null && SucceededListSize > 0)
+                    {
+                        transaction.TrimList(GetDeletedKey(item), 0, SucceededListSize);
+                    }
+                }
+                else
+                {
+                    InsertToList(GetDeletedKey(item), context.BackgroundJob.Id);
+                    IncrementCounter(GetStatsDeletedKey(item));
+
+                    if (storage != null && SucceededListSize > 0)
+                    {
+                        TrimList(GetDeletedKey(item), 0, SucceededListSize);
+                    }
                 }
             }
         }
@@ -32,8 +46,16 @@ namespace Hangfire.Tags.Redis
             var tags = GetTags(context);
             foreach (var item in tags)
             {
-                transaction.RemoveFromList(GetDeletedKey(item), context.BackgroundJob.Id);
-                transaction.DecrementCounter(GetStatsDeletedKey(item));
+                if (_useTransactions)
+                {
+                    transaction.RemoveFromList(GetDeletedKey(item), context.BackgroundJob.Id);
+                    transaction.DecrementCounter(GetStatsDeletedKey(item));
+                }
+                else
+                {
+                    RemoveFromList(GetDeletedKey(item), context.BackgroundJob.Id);
+                    DecrementCounter(GetStatsDeletedKey(item));
+                }
             }
         }
 

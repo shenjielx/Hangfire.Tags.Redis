@@ -2,15 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using Hangfire.Common;
+using Hangfire.Redis;
 using Hangfire.States;
 using Hangfire.Storage;
 using Newtonsoft.Json;
+using StackExchange.Redis;
 
 namespace Hangfire.Tags.Redis
 {
     using M = RedisTagsKeyInfo;
     internal class AutomaticRetryFilter : IApplyStateFilter
     {
+        private readonly bool _useTransactions;
+        private readonly IDatabase _database;
+
+        public AutomaticRetryFilter(RedisStorageOptions options, IConnectionMultiplexer multiplexer)
+        {
+            _useTransactions = options.UseTransactions;
+            _database = multiplexer.GetDatabase();
+        }
+        
         protected HashSet<string> GetTags(ApplyStateContext context)
         {
             var tags = context.Connection.GetAllItemsFromSet(M.GetJobKey(context.BackgroundJob.Id));
@@ -43,7 +54,14 @@ namespace Hangfire.Tags.Redis
             {
                 foreach (var item in tags)
                 {
-                    transaction.AddToSet(M.GetRetryKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                    if (_useTransactions)
+                    {
+                        transaction.AddToSet(M.GetRetryKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                    }
+                    else
+                    {
+                        _database.SortedSetAddAsync(M.GetRetryKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                    }
                 }
             }
         }
@@ -55,7 +73,14 @@ namespace Hangfire.Tags.Redis
             {
                 foreach (var item in tags)
                 {
-                    transaction.RemoveFromSet(M.GetRetryKey(item), context.BackgroundJob.Id);
+                    if (_useTransactions)
+                    {
+                        transaction.RemoveFromSet(M.GetRetryKey(item), context.BackgroundJob.Id);
+                    }
+                    else
+                    {
+                        _database.SortedSetRemoveAsync(M.GetRetryKey(item), context.BackgroundJob.Id);
+                    }
                 }
             }
         }

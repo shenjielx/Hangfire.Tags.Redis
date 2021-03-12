@@ -3,12 +3,13 @@ using Hangfire.Common;
 using Hangfire.Redis;
 using Hangfire.States;
 using Hangfire.Storage;
+using StackExchange.Redis;
 
 namespace Hangfire.Tags.Redis
 {
     internal class ProcessingStateHandler : StateHandler
     {
-        public ProcessingStateHandler(RedisStorageOptions options) : base(options)
+        public ProcessingStateHandler(RedisStorageOptions options, IConnectionMultiplexer multiplexer) : base(options, multiplexer)
         {
         }
 
@@ -21,7 +22,14 @@ namespace Hangfire.Tags.Redis
 
             foreach (var item in tags)
             {
-                transaction.AddToSet(GetProcessingKey(item), context.BackgroundJob.Id, timestamp);
+                if (_useTransactions)
+                {
+                    transaction.AddToSet(GetProcessingKey(item), context.BackgroundJob.Id, timestamp);
+                }
+                else
+                {
+                    AddToSet(GetProcessingKey(item), context.BackgroundJob.Id, timestamp);
+                }
             }
         }
 
@@ -30,7 +38,14 @@ namespace Hangfire.Tags.Redis
             var tags = GetTags(context);
             foreach (var item in tags)
             {
-                transaction.RemoveFromSet(GetProcessingKey(item), context.BackgroundJob.Id);
+                if (_useTransactions)
+                {
+                    transaction.RemoveFromSet(GetProcessingKey(item), context.BackgroundJob.Id);
+                }
+                else
+                {
+                    RemoveFromSet(GetProcessingKey(item), context.BackgroundJob.Id);
+                }
             }
         }
 
