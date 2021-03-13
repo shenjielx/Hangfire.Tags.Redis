@@ -30,12 +30,12 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    InsertToList(GetDeletedKey(item), context.BackgroundJob.Id);
-                    IncrementCounter(GetStatsDeletedKey(item));
+                    InsertToList(_prefix + GetDeletedKey(item), context.BackgroundJob.Id);
+                    IncrementCounter(_prefix + GetStatsDeletedKey(item));
 
                     if (storage != null && SucceededListSize > 0)
                     {
-                        TrimList(GetDeletedKey(item), 0, SucceededListSize);
+                        TrimList(_prefix + GetDeletedKey(item), 0, SucceededListSize);
                     }
                 }
             }
@@ -53,8 +53,8 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    RemoveFromList(GetDeletedKey(item), context.BackgroundJob.Id);
-                    DecrementCounter(GetStatsDeletedKey(item));
+                    RemoveFromList(_prefix + GetDeletedKey(item), context.BackgroundJob.Id);
+                    DecrementCounter(_prefix + GetStatsDeletedKey(item));
                 }
             }
         }

@@ -12,6 +12,7 @@ namespace Hangfire.Tags.Redis
     using M = RedisTagsKeyInfo;
     internal abstract class StateHandler : IStateHandler
     {
+        protected readonly string _prefix;
         internal readonly int SucceededListSize;
         internal readonly int DeletedListSize;
         protected readonly bool _useTransactions;
@@ -23,6 +24,7 @@ namespace Hangfire.Tags.Redis
             DeletedListSize = options.DeletedListSize > 0 ? options.DeletedListSize : 1000;
             _useTransactions = options.UseTransactions;
             _database = multiplexer.GetDatabase();
+            _prefix = options.Prefix;
         }
 
         internal string GetSucceededKey(string tagName) => M.GetSucceededKey(tagName);

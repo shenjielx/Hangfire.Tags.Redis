@@ -39,19 +39,19 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    InsertToList(GetSucceededKey(item), context.BackgroundJob.Id);
-                    IncrementCounter(GetStatsSucceededKey(item));
-                    IncrementCounter(GetStatsSucceededDateKey(item), TimeSpan.FromDays(30));
-                    IncrementCounter(GetStatsSucceededHourKey(item), TimeSpan.FromDays(7));
-                    IncrementCounter(GetStatsSucceededMinuteKey(item), TimeSpan.FromDays(2));
+                    InsertToList(_prefix + GetSucceededKey(item), context.BackgroundJob.Id);
+                    IncrementCounter(_prefix + GetStatsSucceededKey(item));
+                    IncrementCounter(_prefix + GetStatsSucceededDateKey(item), TimeSpan.FromDays(30));
+                    IncrementCounter(_prefix + GetStatsSucceededHourKey(item), TimeSpan.FromDays(7));
+                    IncrementCounter(_prefix + GetStatsSucceededMinuteKey(item), TimeSpan.FromDays(2));
                     //Environment.MachineName
-                    IncrementCounter(GetStatsSucceededDateKey(machineItem), TimeSpan.FromDays(30));
-                    IncrementCounter(GetStatsSucceededHourKey(machineItem), TimeSpan.FromDays(7));
-                    IncrementCounter(GetStatsSucceededMinuteKey(machineItem), TimeSpan.FromDays(1));
+                    IncrementCounter(_prefix + GetStatsSucceededDateKey(machineItem), TimeSpan.FromDays(30));
+                    IncrementCounter(_prefix + GetStatsSucceededHourKey(machineItem), TimeSpan.FromDays(7));
+                    IncrementCounter(_prefix + GetStatsSucceededMinuteKey(machineItem), TimeSpan.FromDays(1));
 
                     if (storage != null && SucceededListSize > 0)
                     {
-                        TrimList(GetSucceededKey(item), 0, SucceededListSize);
+                        TrimList(_prefix + GetSucceededKey(item), 0, SucceededListSize);
                     }
                 }
             }
@@ -67,9 +67,9 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    IncrementCounter(GetStatsSucceededDateKey(machine), TimeSpan.FromDays(30));
-                    IncrementCounter(GetStatsSucceededHourKey(machine), TimeSpan.FromDays(7));
-                    IncrementCounter(GetStatsSucceededMinuteKey(machine), TimeSpan.FromDays(1));
+                    IncrementCounter(_prefix + GetStatsSucceededDateKey(machine), TimeSpan.FromDays(30));
+                    IncrementCounter(_prefix + GetStatsSucceededHourKey(machine), TimeSpan.FromDays(7));
+                    IncrementCounter(_prefix + GetStatsSucceededMinuteKey(machine), TimeSpan.FromDays(1));
                 }
             }
             catch
@@ -91,8 +91,8 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    RemoveFromList(GetSucceededKey(item), context.BackgroundJob.Id);
-                    DecrementCounter(GetStatsSucceededKey(item));
+                    RemoveFromList(_prefix + GetSucceededKey(item), context.BackgroundJob.Id);
+                    DecrementCounter(_prefix + GetStatsSucceededKey(item));
                 }
             }
         }

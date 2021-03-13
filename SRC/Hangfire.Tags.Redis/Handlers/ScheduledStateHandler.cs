@@ -27,7 +27,7 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    AddToSet(GetScheduledKey(item), context.BackgroundJob.Id, timestamp);
+                    AddToSet(_prefix + GetScheduledKey(item), context.BackgroundJob.Id, timestamp);
                 }
             }
         }
@@ -43,7 +43,7 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    RemoveFromSet(GetScheduledKey(item), context.BackgroundJob.Id);
+                    RemoveFromSet(_prefix + GetScheduledKey(item), context.BackgroundJob.Id);
                 }
             }
         }

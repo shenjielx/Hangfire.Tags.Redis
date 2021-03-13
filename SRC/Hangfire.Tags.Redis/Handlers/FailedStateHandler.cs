@@ -26,24 +26,24 @@ namespace Hangfire.Tags.Redis
                 if (_useTransactions)
                 {
                     transaction.AddToSet(GetFailedKey(item), context.BackgroundJob.Id, timestamp);
-                    transaction.IncrementCounter(GetStatsFailedDateKey(item), TimeSpan.FromDays(30));
-                    transaction.IncrementCounter(GetStatsFailedHourKey(item), TimeSpan.FromDays(7));
-                    transaction.IncrementCounter(GetStatsFailedMinuteKey(item), TimeSpan.FromDays(2));
+                    transaction.IncrementCounter(_prefix + GetStatsFailedDateKey(item), TimeSpan.FromDays(30));
+                    transaction.IncrementCounter(_prefix + GetStatsFailedHourKey(item), TimeSpan.FromDays(7));
+                    transaction.IncrementCounter(_prefix + GetStatsFailedMinuteKey(item), TimeSpan.FromDays(2));
                     //Environment.MachineName
-                    transaction.IncrementCounter(GetStatsFailedDateKey(machineItem), TimeSpan.FromDays(30));
-                    transaction.IncrementCounter(GetStatsFailedHourKey(machineItem), TimeSpan.FromDays(7));
-                    transaction.IncrementCounter(GetStatsFailedMinuteKey(machineItem), TimeSpan.FromDays(1));
+                    transaction.IncrementCounter(_prefix + GetStatsFailedDateKey(machineItem), TimeSpan.FromDays(30));
+                    transaction.IncrementCounter(_prefix + GetStatsFailedHourKey(machineItem), TimeSpan.FromDays(7));
+                    transaction.IncrementCounter(_prefix + GetStatsFailedMinuteKey(machineItem), TimeSpan.FromDays(1));
                 }
                 else
                 {
-                    _database.SortedSetAddAsync(GetFailedKey(item), context.BackgroundJob.Id, timestamp);
-                    IncrementCounter(GetStatsFailedDateKey(item), TimeSpan.FromDays(30));
-                    IncrementCounter(GetStatsFailedHourKey(item), TimeSpan.FromDays(7));
-                    IncrementCounter(GetStatsFailedMinuteKey(item), TimeSpan.FromDays(2));
+                    AddToSet(_prefix + GetFailedKey(item), context.BackgroundJob.Id, timestamp);
+                    IncrementCounter(_prefix + GetStatsFailedDateKey(item), TimeSpan.FromDays(30));
+                    IncrementCounter(_prefix + GetStatsFailedHourKey(item), TimeSpan.FromDays(7));
+                    IncrementCounter(_prefix + GetStatsFailedMinuteKey(item), TimeSpan.FromDays(2));
                     //Environment.MachineName
-                    IncrementCounter(GetStatsFailedDateKey(machineItem), TimeSpan.FromDays(30));
-                    IncrementCounter(GetStatsFailedHourKey(machineItem), TimeSpan.FromDays(7));
-                    IncrementCounter(GetStatsFailedMinuteKey(machineItem), TimeSpan.FromDays(1));
+                    IncrementCounter(_prefix + GetStatsFailedDateKey(machineItem), TimeSpan.FromDays(30));
+                    IncrementCounter(_prefix + GetStatsFailedHourKey(machineItem), TimeSpan.FromDays(7));
+                    IncrementCounter(_prefix + GetStatsFailedMinuteKey(machineItem), TimeSpan.FromDays(1));
                 }
             }
             try
@@ -58,9 +58,9 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    IncrementCounter(GetStatsFailedDateKey(machine), TimeSpan.FromDays(30));
-                    IncrementCounter(GetStatsFailedHourKey(machine), TimeSpan.FromDays(7));
-                    IncrementCounter(GetStatsFailedMinuteKey(machine), TimeSpan.FromDays(1));
+                    IncrementCounter(_prefix + GetStatsFailedDateKey(machine), TimeSpan.FromDays(30));
+                    IncrementCounter(_prefix + GetStatsFailedHourKey(machine), TimeSpan.FromDays(7));
+                    IncrementCounter(_prefix + GetStatsFailedMinuteKey(machine), TimeSpan.FromDays(1));
                 }
             }
             catch
@@ -81,7 +81,7 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    RemoveFromSet(GetFailedKey(item), context.BackgroundJob.Id);
+                    RemoveFromSet(_prefix + GetFailedKey(item), context.BackgroundJob.Id);
                 }
             }
         }

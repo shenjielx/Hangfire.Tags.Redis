@@ -25,7 +25,7 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    _database.SortedSetAddAsync(GetAwaitingKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                    _database.SortedSetAddAsync(_prefix + GetAwaitingKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
                 }
             }
         }
@@ -41,7 +41,7 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    _database.SortedSetRemoveAsync(GetAwaitingKey(item), context.BackgroundJob.Id);
+                    _database.SortedSetRemoveAsync(_prefix + GetAwaitingKey(item), context.BackgroundJob.Id);
                 }
             }
         }

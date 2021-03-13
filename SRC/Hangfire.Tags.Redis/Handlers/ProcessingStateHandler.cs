@@ -28,7 +28,7 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    AddToSet(GetProcessingKey(item), context.BackgroundJob.Id, timestamp);
+                    AddToSet(_prefix + GetProcessingKey(item), context.BackgroundJob.Id, timestamp);
                 }
             }
         }
@@ -44,7 +44,7 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    RemoveFromSet(GetProcessingKey(item), context.BackgroundJob.Id);
+                    RemoveFromSet(_prefix + GetProcessingKey(item), context.BackgroundJob.Id);
                 }
             }
         }

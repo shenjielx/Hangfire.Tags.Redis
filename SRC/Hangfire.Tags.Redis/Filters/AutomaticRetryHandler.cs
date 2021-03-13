@@ -13,11 +13,13 @@ namespace Hangfire.Tags.Redis
     using M = RedisTagsKeyInfo;
     internal class AutomaticRetryFilter : IApplyStateFilter
     {
+        private readonly string _prefix;
         private readonly bool _useTransactions;
         private readonly IDatabase _database;
 
         public AutomaticRetryFilter(RedisStorageOptions options, IConnectionMultiplexer multiplexer)
         {
+            _prefix = options.Prefix;
             _useTransactions = options.UseTransactions;
             _database = multiplexer.GetDatabase();
         }
@@ -60,7 +62,7 @@ namespace Hangfire.Tags.Redis
                     }
                     else
                     {
-                        _database.SortedSetAddAsync(M.GetRetryKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                        _database.SortedSetAddAsync(_prefix + M.GetRetryKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
                     }
                 }
             }
@@ -79,7 +81,7 @@ namespace Hangfire.Tags.Redis
                     }
                     else
                     {
-                        _database.SortedSetRemoveAsync(M.GetRetryKey(item), context.BackgroundJob.Id);
+                        _database.SortedSetRemoveAsync(_prefix + M.GetRetryKey(item), context.BackgroundJob.Id);
                     }
                 }
             }

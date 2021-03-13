@@ -15,7 +15,7 @@ namespace Hangfire.Tags.Redis
 
         public RedisTagsTransaction(RedisStorageOptions options, IWriteOnlyTransaction transaction, IDatabase database)
         {
-            if (transaction.GetType().Name != "RedisWriteOnlyTransaction")
+            if (options.UseTransactions && transaction.GetType().Name != "RedisWriteOnlyTransaction")
                 throw new ArgumentException("The transaction is not an Redis transaction", nameof(transaction));
 
             _database = database;

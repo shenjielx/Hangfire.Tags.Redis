@@ -6,10 +6,10 @@
     <PackageProjectUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</RepositoryUrl>
     <Description>提供基于Tag的查询Service。</Description>
-    <Version>1.3.0</Version>
+    <Version>1.3.2</Version>
     <PackageTags>Hangfire Tags Redis</PackageTags>
     <PackageReleaseNotes>增加UseTransaction判断</PackageReleaseNotes>
-    <PackageVersion>1.3.0</PackageVersion>
+    <PackageVersion>1.3.2</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

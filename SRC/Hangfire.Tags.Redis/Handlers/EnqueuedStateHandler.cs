@@ -23,11 +23,11 @@ namespace Hangfire.Tags.Redis
             {
                 if (_useTransactions)
                 {
-                    transaction.AddToSet(GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
+                    transaction.AddToSet(_prefix + GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
                 }
                 else
                 {
-                    AddToSet(GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
+                    AddToSet(_prefix + GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
                 }
             }
         }
@@ -43,7 +43,7 @@ namespace Hangfire.Tags.Redis
                 }
                 else
                 {
-                    RemoveFromSet(GetEnqueuedKey(item), context.BackgroundJob.Id);
+                    RemoveFromSet(_prefix + GetEnqueuedKey(item), context.BackgroundJob.Id);
                 }
             }
         }
