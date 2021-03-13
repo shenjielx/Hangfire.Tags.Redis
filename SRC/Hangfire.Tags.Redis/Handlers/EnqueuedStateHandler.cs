@@ -19,32 +19,42 @@ namespace Hangfire.Tags.Redis
             var enqueuedState = context.NewState as EnqueuedState;
             var timestamp = JobHelper.ToTimestamp(enqueuedState.EnqueuedAt);
 
-            foreach (var item in tags)
+            if (_useTransactions)
             {
-                if (_useTransactions)
+                foreach (var item in tags)
                 {
                     transaction.AddToSet(_prefix + GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
                 }
-                else
+            }
+            else
+            {
+                var pipeline = _database.CreateBatch();
+                foreach (var item in tags)
                 {
-                    AddToSet(_prefix + GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
+                    AddToSet(pipeline, _prefix + GetEnqueuedKey(item), context.BackgroundJob.Id, timestamp);
                 }
+                pipeline.Execute();
             }
         }
 
         public override void Unapply(ApplyStateContext context, IWriteOnlyTransaction transaction)
         {
             var tags = GetTags(context);
-            foreach (var item in tags)
+            if (_useTransactions)
             {
-                if (_useTransactions)
+                foreach (var item in tags)
                 {
                     transaction.RemoveFromSet(GetEnqueuedKey(item), context.BackgroundJob.Id);
                 }
-                else
+            }
+            else
+            {
+                var pipeline = _database.CreateBatch();
+                foreach (var item in tags)
                 {
-                    RemoveFromSet(_prefix + GetEnqueuedKey(item), context.BackgroundJob.Id);
+                    RemoveFromSet(pipeline, _prefix + GetEnqueuedKey(item), context.BackgroundJob.Id);
                 }
+                pipeline.Execute();
             }
         }
 

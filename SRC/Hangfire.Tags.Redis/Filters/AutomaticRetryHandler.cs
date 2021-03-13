@@ -62,7 +62,7 @@ namespace Hangfire.Tags.Redis
                     }
                     else
                     {
-                        _database.SortedSetAddAsync(_prefix + M.GetRetryKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                        _database.SortedSetAdd(_prefix + M.GetRetryKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
                     }
                 }
             }
@@ -81,7 +81,7 @@ namespace Hangfire.Tags.Redis
                     }
                     else
                     {
-                        _database.SortedSetRemoveAsync(_prefix + M.GetRetryKey(item), context.BackgroundJob.Id);
+                        _database.SortedSetRemove(_prefix + M.GetRetryKey(item), context.BackgroundJob.Id);
                     }
                 }
             }

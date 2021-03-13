@@ -16,9 +16,9 @@ namespace Hangfire.Tags.Redis
             var tags = GetTags(context);
             var storage = context.Storage as RedisStorage;
 
-            foreach (var item in tags)
+            if (_useTransactions)
             {
-                if (_useTransactions)
+                foreach (var item in tags)
                 {
                     transaction.InsertToList(GetDeletedKey(item), context.BackgroundJob.Id);
                     transaction.IncrementCounter(GetStatsDeletedKey(item));
@@ -28,34 +28,44 @@ namespace Hangfire.Tags.Redis
                         transaction.TrimList(GetDeletedKey(item), 0, SucceededListSize);
                     }
                 }
-                else
+            }
+            else
+            {
+                var pipeline = _database.CreateBatch();
+                foreach (var item in tags)
                 {
-                    InsertToList(_prefix + GetDeletedKey(item), context.BackgroundJob.Id);
-                    IncrementCounter(_prefix + GetStatsDeletedKey(item));
+                    InsertToList(pipeline, _prefix + GetDeletedKey(item), context.BackgroundJob.Id);
+                    IncrementCounter(pipeline, _prefix + GetStatsDeletedKey(item));
 
                     if (storage != null && SucceededListSize > 0)
                     {
-                        TrimList(_prefix + GetDeletedKey(item), 0, SucceededListSize);
+                        TrimList(pipeline, _prefix + GetDeletedKey(item), 0, SucceededListSize);
                     }
                 }
+                pipeline.Execute();
             }
         }
 
         public override void Unapply(ApplyStateContext context, IWriteOnlyTransaction transaction)
         {
             var tags = GetTags(context);
-            foreach (var item in tags)
+            if (_useTransactions)
             {
-                if (_useTransactions)
+                foreach (var item in tags)
                 {
                     transaction.RemoveFromList(GetDeletedKey(item), context.BackgroundJob.Id);
                     transaction.DecrementCounter(GetStatsDeletedKey(item));
                 }
-                else
+            }
+            else
+            {
+                var pipeline = _database.CreateBatch();
+                foreach (var item in tags)
                 {
-                    RemoveFromList(_prefix + GetDeletedKey(item), context.BackgroundJob.Id);
-                    DecrementCounter(_prefix + GetStatsDeletedKey(item));
+                    RemoveFromList(pipeline, _prefix + GetDeletedKey(item), context.BackgroundJob.Id);
+                    DecrementCounter(pipeline, _prefix + GetStatsDeletedKey(item));
                 }
+                pipeline.Execute();
             }
         }
 

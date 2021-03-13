@@ -16,33 +16,43 @@ namespace Hangfire.Tags.Redis
         public override void Apply(ApplyStateContext context, IWriteOnlyTransaction transaction)
         {
             var tags = GetTags(context);
-
-            foreach (var item in tags)
+            var timestamp = JobHelper.ToTimestamp(DateTime.UtcNow);
+            if (_useTransactions)
             {
-                if (_useTransactions)
+                foreach (var item in tags)
                 {
-                    transaction.AddToSet(GetAwaitingKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                    transaction.AddToSet(GetAwaitingKey(item), context.BackgroundJob.Id, timestamp);
                 }
-                else
+            }
+            else
+            {
+                var pipeline = _database.CreateBatch();
+                foreach (var item in tags)
                 {
-                    _database.SortedSetAddAsync(_prefix + GetAwaitingKey(item), context.BackgroundJob.Id, JobHelper.ToTimestamp(DateTime.UtcNow));
+                    pipeline.SortedSetAddAsync(_prefix + GetAwaitingKey(item), context.BackgroundJob.Id, timestamp);
                 }
+                pipeline.Execute();
             }
         }
 
         public override void Unapply(ApplyStateContext context, IWriteOnlyTransaction transaction)
         {
             var tags = GetTags(context);
-            foreach (var item in tags)
+            if (_useTransactions)
             {
-                if (_useTransactions)
+                foreach (var item in tags)
                 {
                     transaction.RemoveFromSet(GetAwaitingKey(item), context.BackgroundJob.Id);
                 }
-                else
+            }
+            else
+            {
+                var pipeline = _database.CreateBatch();
+                foreach (var item in tags)
                 {
-                    _database.SortedSetRemoveAsync(_prefix + GetAwaitingKey(item), context.BackgroundJob.Id);
+                    pipeline.SortedSetRemoveAsync(_prefix + GetAwaitingKey(item), context.BackgroundJob.Id);
                 }
+                pipeline.Execute();
             }
         }
 

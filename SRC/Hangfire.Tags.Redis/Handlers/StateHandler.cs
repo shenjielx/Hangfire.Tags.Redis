@@ -78,36 +78,36 @@ namespace Hangfire.Tags.Redis
         public abstract void Apply(ApplyStateContext context, IWriteOnlyTransaction transaction);
         public abstract void Unapply(ApplyStateContext context, IWriteOnlyTransaction transaction);
 
-        protected void IncrementCounter(string key, TimeSpan expireIn)
+        protected void IncrementCounter(IBatch pipeline, string key, TimeSpan expireIn)
         {
-            _database.StringIncrementAsync(key);
-            _database.KeyExpireAsync(key, expireIn);
+            pipeline.StringIncrementAsync(key);
+            pipeline.KeyExpireAsync(key, expireIn);
         }
         
-        protected void IncrementCounter(string key) => _database.StringIncrementAsync(key);
+        protected void IncrementCounter(IBatch pipeline, string key) => pipeline.StringIncrementAsync(key);
 
-        protected void InsertToList(string key, string value) => _database.ListLeftPushAsync(key, (RedisValue) value);
+        protected void InsertToList(IBatch pipeline, string key, string value) => pipeline.ListLeftPushAsync(key, (RedisValue) value);
 
-        protected void RemoveFromList(string key, string value) => _database.ListRemoveAsync(key, (RedisValue) value);
+        protected void RemoveFromList(IBatch pipeline, string key, string value) => pipeline.ListRemoveAsync(key, (RedisValue) value);
 
-        protected void TrimList(string key, int keepStartingFrom, int keepEndingAt) => _database.ListTrimAsync(key, keepStartingFrom, keepEndingAt);
+        protected void TrimList(IBatch pipeline, string key, int keepStartingFrom, int keepEndingAt) => pipeline.ListTrimAsync(key, keepStartingFrom, keepEndingAt);
 
-        protected void DecrementCounter(string key) => _database.StringDecrementAsync(key);
+        protected void DecrementCounter(IBatch pipeline, string key) => pipeline.StringDecrementAsync(key);
 
-        protected void AddToSet(string key, string value) => AddToSet(key, value, 0.0);
+        protected void AddToSet(IBatch pipeline, string key, string value) => AddToSet(pipeline, key, value, 0.0);
 
-        protected void AddToSet(string key, string value, double score)
+        protected void AddToSet(IBatch pipeline, string key, string value, double score)
         {
             if (value == null)
                 throw new ArgumentNullException(nameof (value));
-            _database.SortedSetAddAsync(key, (RedisValue) value, score);
+            pipeline.SortedSetAddAsync(key, (RedisValue) value, score);
         }
 
-        protected void RemoveFromSet(string key, string value)
+        protected void RemoveFromSet(IBatch pipeline, string key, string value)
         {
             if (value == null)
                 throw new ArgumentNullException(nameof (value));
-            _database.SortedSetRemoveAsync((RedisKey) key, (RedisValue) value);
+            pipeline.SortedSetRemoveAsync((RedisKey) key, (RedisValue) value);
         }
     }
 
