@@ -6,10 +6,15 @@
     <Description>基于Hangfire.Tags和StackExchange.Redis，提供的Redis版Tags持久化。</Description>
     <PackageProjectUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shenjielx/Hangfire.Tags.Redis</RepositoryUrl>
-    <Version>1.2.1</Version>
-    <PackageReleaseNotes>增加服务器MachineName的统计和查询</PackageReleaseNotes>
+    <Version>1.2.4.1</Version>
     <PackageTags>Hangfire Tags Redis</PackageTags>
-    <PackageVersion>1.2.2</PackageVersion>
+    <PackageVersion>1.2.4.1</PackageVersion>
+    <PackageReleaseNotes>
+      1.2.4.1
+      - improve - 提升Tags List删除元素性能
+      1.2.2
+      - feature 增加服务器MachineName的统计和查询
+    </PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
