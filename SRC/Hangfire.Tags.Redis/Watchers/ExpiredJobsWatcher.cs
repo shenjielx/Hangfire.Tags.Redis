@@ -46,18 +46,6 @@ namespace Hangfire.Tags.Redis
             return GetType().ToString();
         }
 
-        private  static readonly string LuaScriptCheckKeys = @"local result = {}
-for i= 1, #KEYS do
-  result[i] = redis.call('EXISTS', KEYS[i])
-end
-
-return result";
-
-        private static readonly string LuaScriptListRemove = @"
-for i= 1, #ARGV do
-  redis.call('LREM', KEYS[1], -1, ARGV[i])
-end";
-
         void IBackgroundProcess.Execute([NotNull] BackgroundProcessContext context)
         {
             MonitoringApi.UseConnection(redis =>
@@ -95,20 +83,18 @@ end";
                                 : redis.ListRange(redisKey, first, last).ToStringArray();
                             if (jobIds.Length == 0) continue;
 
-                            // var pipeline = redis.CreateBatch();
-                            // var tasks = new Task[jobIds.Length];
-                            //
-                            // for (var i = 0; i < jobIds.Length; i++)
-                            // {
-                            //     tasks[i] = pipeline.KeyExistsAsync(GetRedisKey($"job:{jobIds[i]}"));
-                            // }
-                            //
-                            // pipeline.Execute();
-                            // Task.WaitAll(tasks);
-                            //
-                            // keysToRemove.AddRange(jobIds.Where((t, i) => !((Task<bool>) tasks[i]).Result));
-                            var result = (int[]) redis.ScriptEvaluate(LuaScriptCheckKeys, jobIds.Select(x=>(RedisKey)GetRedisKey($"job:{x}")).ToArray());
-                            keysToRemove.AddRange(jobIds.Where((t, i) => result != null && result.Length >= i && result[i] == 0));
+                            var pipeline = redis.CreateBatch();
+                            var tasks = new Task[jobIds.Length];
+                            
+                            for (var i = 0; i < jobIds.Length; i++)
+                            {
+                                tasks[i] = pipeline.KeyExistsAsync(GetRedisKey($"job:{jobIds[i]}"));
+                            }
+                            
+                            pipeline.Execute();
+                            Task.WaitAll(tasks);
+                            
+                            keysToRemove.AddRange(jobIds.Where((t, i) => !((Task<bool>) tasks[i]).Result));
                         }
 
                         if (keysToRemove.Count == 0) continue;
@@ -116,47 +102,19 @@ end";
                         Logger.InfoFormat("Removing {0} expired jobs from '{1}' list...", keysToRemove.Count, key);
 
                         var transaction = redis.CreateTransaction();
-                        var keysToRemove2 = new List<string>();
-                        var hasTags = false;
                         foreach (var jobId in keysToRemove)
                         {
-                            //connection.ListRemoveAsync(_storage.GetRedisKey(key), value);
                             if (IsTagsKey(key))
                             {
-                                hasTags = true;
                                 transaction.SortedSetRemoveAsync(redisKey, jobId);
-                                // transaction.RemoveFromSet(key, jobId);
                             }
                             else
                             {
-                                keysToRemove2.Add(jobId);
-                                // transaction.ListRemoveAsync(redisKey, jobId, -1);
-                                // transaction.RemoveFromList(key, jobId);
+                                transaction.ListRemoveAsync(redisKey, jobId, -1);
                             }
                         }
 
-                        if (hasTags)
-                        {
-                            Commit(transaction);
-                        }
-                        redis.ScriptEvaluate(LuaScriptListRemove, new RedisKey[] {redisKey}, keysToRemove.Select(x=>(RedisValue)x).ToArray());
-                        // using (var transaction = redis.CreateWriteTransaction())
-                        // {
-                        //     foreach (var jobId in keysToRemove)
-                        //     {
-                        //         //connection.ListRemoveAsync(_storage.GetRedisKey(key), value);
-                        //         if (IsTagsKey(key))
-                        //         {
-                        //             transaction.RemoveFromSet(key, jobId);
-                        //         }
-                        //         else
-                        //         {
-                        //             transaction.RemoveFromList(key, jobId);
-                        //         }
-                        //     }
-                        //
-                        //     transaction.Commit();
-                        // }
+                        Commit(transaction);
                     }
                     finally
                     {
